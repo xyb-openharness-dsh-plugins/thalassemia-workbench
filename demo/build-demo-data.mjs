@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join, dirname } from 'node:path'
+import { cadenceSnapshotFromFacts } from '../dsh/cadence-view.js'
 
 const ROOT = join(import.meta.dirname, '..')
 export const DATA_END = '2026-10-25'
@@ -234,7 +235,21 @@ function assemble(p) {
     monthly[m] = monthly[m] || { transfusion: 0, chelation: 0, other: 0 }
     if (c.amount_cents !== null) monthly[m][c.category] += c.amount_cents
   }
+  const cadence = cadenceSnapshotFromFacts({
+    birth_date: p.birth_date,
+    dx_date: p.dx_date,
+    transfusion_start: p.transfusion_start,
+    records: {
+      ferritin: p.iron.at(-1)?.date || null,
+      growth: p.growth.at(-1)?.date || null,
+      t2star_cardiac: p.id === 'A' ? '2025-11-03' : '2026-01-18',
+      thyroid: p.screening.find((r) => r.item_text.includes('甲状腺'))?.done_date || null,
+      ogtt: p.screening.find((r) => r.item_text.includes('糖') || r.item_text.includes('OGTT'))?.done_date || null,
+      cardiac_function: p.screening.find((r) => r.item_text.includes('心脏超声'))?.done_date || null,
+    },
+  }, DATA_END, p.id)
   return {
+    cadence,
     profile: {
       id: p.id, name: p.name, relation: p.relation, recorder: p.recorder, sex: p.sex, age: p.age,
       meta: p.meta, headline: p.headline, genotype: p.genotype, birth_date: p.birth_date,

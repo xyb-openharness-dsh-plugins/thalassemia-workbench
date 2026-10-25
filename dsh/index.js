@@ -48,15 +48,9 @@ async function openDataSource(root) {
     db,
     bootstrap: () => bootstrap(db, { version }),
     profile: (id) => getProfile(db, id),
-    cadence: () => ({
-      checks: CADENCE.checks.map((c) => ({
-        code: c.code, label: c.label, interval_months: c.interval_months, ref: c.ref,
-        confidence: c.confidence, alternates: c.alternates || [], note: c.note || null,
-      })),
-      band_note: CADENCE.band_note,
-      documents: CADENCE.documents,
-      helpers: { addMonths, checkpoints: (code, start) => checkpoints(code, start), plan: (opts) => buildFollowupPlan(opts), dual: (code) => dualCadence(code) },
-    }),
+    // 只返回 JSON 可序列化的参考节点：函数进 HTTP 会被 JSON.stringify 吞成 {}，
+    // 前端会以为能自己算节点（独立评审 P0-4 的根因）。
+    cadence: (query = {}) => cadenceSnapshot(db, query.profile || 'A', query.as_of || undefined),
     addTransfusion: (body) => insertTransfusion(db, body),
     addFerritin: (body) => insertFerritin(db, body),
     addQuestion: (body) => insertQuestion(db, body),

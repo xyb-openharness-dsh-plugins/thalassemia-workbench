@@ -7,6 +7,7 @@
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { cadenceSnapshot } from './cadence-view.js'
 
 const PAGES = JSON.parse(readFileSync(fileURLToPath(new URL('../src/pages.json', import.meta.url)), 'utf8')).pages
 const WINDOW_MONTHS = 6
@@ -74,6 +75,7 @@ export function profileBundle(db, id, { dataEnd = new Date().toISOString().slice
   }
 
   return {
+    cadence: cadenceSnapshot(db, id, dataEnd),
     profile: profileMeta(p),
     transfusion: {
       section_title: transfusions[0]?.section_title || '输血记录',

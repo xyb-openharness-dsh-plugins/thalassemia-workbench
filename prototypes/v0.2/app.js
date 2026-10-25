@@ -549,7 +549,23 @@ function vScreening(sub) {
   const cat = ['annual', 'endocrine', 'cardiac', 'infection'][s] || 'annual'
   const rows = p.screening.rows.filter((r) => r[1] === cat)
   const label = { annual: '年度清单', endocrine: '内分泌筛查', cardiac: '心功能与铁负荷影像', infection: '感染与疫苗' }[cat]
+  const cad = p.cadence || null
+  const cadenceCard = cad ? card({
+    title: '参考节点（不是预约，不是"该查了"）',
+    sub: '起点来自确诊/首次输血/生日；只显示你记录过的事实与规则推算的节点',
+    body: `<div class="table-wrap"><table><thead><tr><th>检查项</th><th>起点</th><th>最近节点</th><th>上次记录</th><th>说明</th></tr></thead><tbody>
+      ${cad.checks.map((c) => `<tr>
+        <td>${esc(c.label)}</td>
+        <td>${esc(c.start_date || c.start_note || '起点未知')}</td>
+        <td>${c.dates && c.dates.length ? esc(c.dates.slice(-2).join(' / ')) : '—'}</td>
+        <td>${esc(c.last_date || '未记录')}${c.days_since !== null && c.days_since !== undefined ? `（${c.days_since} 天前）` : ''}</td>
+        <td>${esc(c.interval_months ? `${c.interval_months} 个月间隔 · ${c.ref || '出处未取得'}` : `无固定间隔（未取得指南数字）${c.note ? ' · ' + c.note.replaceAll('**', '') : ''}`)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>
+    <p class="note-line">${esc(cad.band_note)} ${esc(cad.reference_note)}</p>`,
+  }) : card({ title: '参考节点', sub: '节奏数据未加载', body: '<div class="empty">没有拿到节奏数据；这不代表不需要复查。</div>' })
   return `${voiceBlock('screening')}${pageHead('screening', true)}
+  ${cadenceCard}
   ${guideNote(['G1-23', 'G1-11', 'G1-14'], `本档案已记录筛查项 <b>${p.screening.rows.length}</b> 项，其中已有结果 <b>${p.screening.rows.filter((r) => r[3] !== '—').length}</b> 项；甲状腺最近一次 ${p.screening.rows.find((r) => r[0].includes('甲状腺'))?.[3] || '未记录'}。`)}
   ${card({ title: label, sub: '三态：已做 / 未做 / 未出报告；日期只来自医嘱原文', actions: moreMenu('screening'),
     body: table(['项目', '计划日（医嘱原文）', '完成日', '结果原文', '出处'], rows.map((r) => [r[0], r[2], r[3], r[4], r[5]])) })}

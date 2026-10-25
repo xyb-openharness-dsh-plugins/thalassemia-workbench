@@ -128,7 +128,11 @@ export function createApiHandler({ source, version, prefix = '' }) {
 
     if (path === `${prefix}/api/cadence`) {
       if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' })
-      return sendJson(res, 200, source.cadence())
+      try {
+        return sendJson(res, 200, source.cadence({ profile: url.searchParams.get('profile') || 'A', as_of: url.searchParams.get('as_of') || undefined }))
+      } catch (error) {
+        return sendJson(res, error.status || 503, { error: String(error.message || error) })
+      }
     }
 
     if (path === `${prefix}/api/transfusion` && req.method === 'POST') {

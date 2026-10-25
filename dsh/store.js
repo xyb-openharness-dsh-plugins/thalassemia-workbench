@@ -5,8 +5,8 @@
  * - 派生值（输血间隔、百分位）不落库，读的时候算。
  * - 复合主键表裸 SELECT 一律 ORDER BY rowid；手写倒序只 ORDER BY ord。
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCHEMA_DIR = fileURLToPath(new URL('../schema', import.meta.url))
@@ -20,6 +20,9 @@ export function migrationFiles(dir = SCHEMA_DIR) {
 
 export async function openDatabase(file) {
   const { DatabaseSync } = await import('node:sqlite')
+  // SQLite 只建库文件、不建父目录；宿主的 dshHomePath() 也不建。
+  // 少了这一步，首次装机就会 ERR_SQLITE_ERROR(14) unable to open database file。
+  if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true })
   const db = new DatabaseSync(file)
   db.exec('PRAGMA foreign_keys = ON')
   return db

@@ -34,11 +34,16 @@ function sendJson(res, status, body) {
   res.end(buf)
 }
 
-function openDataSource(root) {
+async function openDataSource(root) {
   const file = root ? `${root.replace(/\/+$/, '')}/${DB_FILE}` : ':memory:'
-  const db = openDatabase(file)
-  migrate(db)
-  seedDemo(db)
+  const db = await openDatabase(file)
+  try {
+    migrate(db)
+    seedDemo(db)
+  } catch (error) {
+    close(db)
+    throw error
+  }
   return {
     db,
     bootstrap: () => bootstrap(db, { version }),
@@ -114,15 +119,18 @@ export function insertQuestion(db, body = {}) {
   return { ok: true, id }
 }
 
-export function apply(ctx, config = {}) {
+export async function apply(ctx, config = {}) {
   if (!ctx.webServer?.register) throw new Error('Desktop webServer.register is unavailable')
 
   let source = null
   let failure = null
   try {
-    source = openDataSource(config.root)
+    source = await openDataSource(config.root)
   } catch (error) {
-    failure = error.message
+    // 这里必须 await 并吞掉错误：openDatabase 是异步的，漏掉 await 会变成
+    // unhandled rejection，宿主（Node 24）直接以 "fatal load failure" 退出。
+    failure = config.root ? `${config.root}: ${error.message}` : error.message
+    ctx.logger?.warn?.(`ferropal: 数据目录不可用（${failure}），工作台接口将返回 503`)
   }
 
   const api = createApiHandler({

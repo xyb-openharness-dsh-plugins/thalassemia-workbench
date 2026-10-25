@@ -18,7 +18,7 @@ const port = Number(arg('port') || process.env.PORT || 8787)
 const root = arg('root') || join(import.meta.dirname, '..', '.devroot')
 mkdirSync(root, { recursive: true })
 
-const db = openDatabase(join(root, DB_FILE))
+const db = await openDatabase(join(root, DB_FILE))
 migrate(db)
 seedDemo(db)
 

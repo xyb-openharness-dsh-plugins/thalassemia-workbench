@@ -11,7 +11,7 @@
 
 const DATA = window.DEMO_DATA
 const PAGES = DATA.pages
-const VERSION = 'v0.2.0'
+const VERSION = 'v0.3.1'
 const BUILD = '2026-10-25'
 
 const state = {

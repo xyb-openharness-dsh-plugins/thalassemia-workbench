@@ -76,7 +76,7 @@ async function main() {
   const libVersion = await read('lib/version.js')
   if (!libVersion) fail('version/lib', '缺少 lib/version.js（生成物，供客户端显示版本）')
   else {
-    const got = libVersion.match(/export const version = '([^']+)'/)?.[1]
+    const got = libVersion.match(/export const version = ['"]([^'"]+)['"]/)?.[1]
     if (got === version) ok('version/lib', 'lib/version.js 与 VERSION 一致', got)
     else fail('version/lib', 'lib/version.js 与 VERSION 不一致（或忘了重新生成）', `lib=${got} VERSION=${version}`)
   }

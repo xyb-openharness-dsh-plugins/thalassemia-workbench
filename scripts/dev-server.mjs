@@ -11,6 +11,7 @@ import { seedDemo } from '../dsh/demo.js'
 import { bootstrap, getProfile } from '../dsh/readmodels.js'
 import { createApiHandler } from '../dsh/server.js'
 import { version } from '../lib/version.js'
+import { insertTransfusion, insertFerritin, insertQuestion, insertGrowth } from '../dsh/index.js'
 
 const argv = process.argv.slice(2)
 const arg = (name) => { const i = argv.indexOf('--' + name); return i >= 0 ? argv[i + 1] : undefined }
@@ -26,9 +27,10 @@ const api = createApiHandler({
   source: {
     bootstrap: () => bootstrap(db, { version }),
     cadence: () => ({ checks: [] }),
-    addTransfusion: () => { throw new Error('dev-server 只读') },
-    addFerritin: () => { throw new Error('dev-server 只读') },
-    addQuestion: () => { throw new Error('dev-server 只读') },
+    addTransfusion: (body) => insertTransfusion(db, body),
+    addFerritin: (body) => insertFerritin(db, body),
+    addQuestion: (body) => insertQuestion(db, body),
+    addGrowth: (body) => insertGrowth(db, body),
   },
   version,
   prefix: '',
@@ -37,7 +39,7 @@ const api = createApiHandler({
 const server = createServer((req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1')
   if (url.pathname === '/') { res.writeHead(302, { location: '/ui/' }); return res.end() }
-  if (url.pathname === '/api/health' || url.pathname === '/api/bootstrap' || url.pathname.startsWith('/ui')) return api(req, res)
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/ui')) return api(req, res)
   res.writeHead(404, { 'content-type': 'application/json' }); res.end('{"error":"Not found"}')
 })
 

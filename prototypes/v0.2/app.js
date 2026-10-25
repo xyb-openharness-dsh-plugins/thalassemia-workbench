@@ -9,7 +9,7 @@
  */
 'use strict'
 
-const DATA = window.DEMO_DATA
+let DATA = window.DEMO_DATA
 const PAGES = DATA.pages
 const VERSION = 'v0.3.1'
 const BUILD = '2026-10-25'
@@ -947,8 +947,40 @@ function exportReview() {
   render()
 }
 
+/* 正式页等待落库与读模型刷新；原型没有 adapter，仍走下面的演示分支。 */
+async function persistSave(btn, kind, body, message) {
+  const adapter = window.FERROPAL_PERSISTENCE
+  if (!adapter) return false
+  if (btn.disabled) return true
+  btn.disabled = true
+  const d = $('#dialog')
+  const preventCancel = (e) => e.preventDefault()
+  d.addEventListener('cancel', preventCancel)
+  const controls = [...d.querySelectorAll('input, button')]
+  controls.forEach((el) => { el.disabled = true })
+  $('#save-error')?.remove()
+  try {
+    const fresh = await adapter.save(kind, { ...body, profile_id: state.profile })
+    DATA = fresh
+    window.DEMO_DATA = fresh
+    d.close()
+    render()
+    toast(message)
+  } catch (error) {
+    const alert = document.createElement('p')
+    alert.id = 'save-error'
+    alert.setAttribute('role', 'alert')
+    alert.textContent = '保存未完成：' + error.message + '。表单已保留；若写入已完成但刷新失败，请先重载核对，避免重复保存。'
+    $('#dialog-body').appendChild(alert)
+  } finally {
+    controls.forEach((el) => { el.disabled = false })
+    d.removeEventListener('cancel', preventCancel)
+  }
+  return true
+}
+
 /* ---------------- 事件 ---------------- */
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-act]')
   if (!btn) return
   const act = btn.dataset.act
@@ -994,6 +1026,7 @@ document.addEventListener('click', (e) => {
     const units = numOrNull($('#f-units').value)
     const product = $('#f-product').value || '未填'
     const reaction = $('#f-reaction').value || '无'
+    if (await persistSave(btn, 'transfusion', { date, hb_before: hb, units, product_type: product, reaction_text: reaction }, `已记上 ${date} 这次输血（看板倒计时已更新）`)) return
     p.transfusion.rows.push([date, hb === null ? '—' : String(hb), units === null ? '—' : units + 'U', product, reaction, '手工录入'])
     p.series.hb.push({ d: date, v: hb === null ? null : hb })
     p.events.push({ d: date, kind: 'transfusion', label: `输血 ${units ?? '—'}U` })
@@ -1015,6 +1048,7 @@ document.addEventListener('click', (e) => {
     const v = numOrNull($('#f-ft').value)
     const unit = $('#f-unit').value || 'ng/mL'
     const ref = $('#f-ref').value || ''
+    if (await persistSave(btn, 'ferritin', { date, ferritin: v, unit, report_text: `血清铁蛋白 ${v ?? '—'} ${unit}${ref ? `（参考区间 ${ref}）` : '（参考区间未记录）'}` }, '已补录铁蛋白，趋势图多了一个点')) return
     p.iron.rows.push([date, v === null ? '—' : String(v), unit, `血清铁蛋白 ${v ?? '—'} ${unit}${ref ? `（参考区间 ${ref}）` : '（参考区间未记录）'}`])
     if (v !== null) p.series.ferritin.push({ d: date, v })
     p.events.push({ d: date, kind: 'lab', label: '铁蛋白复查' })
@@ -1027,6 +1061,7 @@ document.addEventListener('click', (e) => {
     const p = P()
     const date = $('#f-date').value || today()
     const h = numOrNull($('#f-h').value), w = numOrNull($('#f-w').value)
+    if (await persistSave(btn, 'growth', { date, height_cm: h, weight_kg: w }, '已记上这次身高体重')) return
     p.growth.rows.push([date, h === null ? '—' : String(h), w === null ? '—' : String(w), '手工录入'])
     if (h !== null) p.series.height.push({ d: date, v: h })
     $('#dialog').close()
@@ -1038,6 +1073,7 @@ document.addEventListener('click', (e) => {
     const p = P()
     const text = $('#f-q').value.trim()
     if (!text) { toast('写一句问题再保存'); return }
+    if (await persistSave(btn, 'question', { text, source_page: state.view }, '已加入就诊问题清单')) return
     p.questions.rows.push([text, state.view, 'open'])
     $('#dialog').close()
     toast('已加入就诊问题清单')

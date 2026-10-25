@@ -35,11 +35,27 @@
   var problem = assertBase(base)
   if (problem) { banner(problem); return }
 
-  fetch(base + '/api/bootstrap', { credentials: 'same-origin', headers: { accept: 'application/json' } })
-    .then(function (res) {
-      if (!res.ok) throw new Error('服务返回 ' + res.status)
-      return res.json()
-    })
+  async function request(path, options) {
+    var res = await fetch(base + '/api/' + path, Object.assign({ credentials: 'same-origin', headers: { accept: 'application/json' } }, options))
+    var data = await res.json()
+    if (!res.ok) throw new Error(data.error || '服务返回 ' + res.status)
+    return data
+  }
+
+  function validate(data) {
+    if (!data || !data.profiles || !Object.keys(data.profiles).length) throw new Error('本机库里还没有档案')
+    return data
+  }
+
+  // 仅正式页注入；原型不加载 bootstrap，继续使用内存演示行为。
+  window.FERROPAL_PERSISTENCE = {
+    save: async function (kind, body) {
+      await request(kind, { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      return validate(await request('bootstrap'))
+    },
+  }
+
+  request('bootstrap')
     .then(function (data) {
       if (!data || !data.profiles || !Object.keys(data.profiles).length) throw new Error('本机库里还没有档案')
       window.DEMO_DATA = data

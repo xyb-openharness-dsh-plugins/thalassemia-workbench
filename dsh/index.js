@@ -60,6 +60,7 @@ async function openDataSource(root) {
     addTransfusion: (body) => insertTransfusion(db, body),
     addFerritin: (body) => insertFerritin(db, body),
     addQuestion: (body) => insertQuestion(db, body),
+    addGrowth: (body) => insertGrowth(db, body),
     close: () => close(db),
   }
 }
@@ -97,7 +98,8 @@ export function insertFerritin(db, body = {}) {
   const date = String(body.date || '').slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日期格式必须是 YYYY-MM-DD')
   const value = numOrNull(body.ferritin)
-  if (value === null) throw new Error('铁蛋白数值不能为空')
+  if (value === null || !Number.isFinite(value)) throw new Error('铁蛋白必须填写有效数值')
+  if (body.unit && body.unit !== 'ng/mL') throw new Error('当前铁蛋白记录仅支持 ng/mL，请核对原报告单位')
   const id = `${profileId}-I${Date.now().toString(36)}`
   db.exec('BEGIN')
   try {
@@ -117,6 +119,19 @@ export function insertQuestion(db, body = {}) {
   db.prepare(`INSERT INTO question_item (id,profile_id,text,source_page,status,created_at,section_title) VALUES (?,?,?,?,?,?,?)`)
     .run(id, profileId, text, body.source_page || 'review', 'open', now(), '就诊问题')
   return { ok: true, id }
+}
+
+export function insertGrowth(db, body = {}) {
+  const profileId = requireProfile(db, body.profile_id || 'A')
+  const date = String(body.date || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日期格式必须是 YYYY-MM-DD')
+  const height = numOrNull(body.height_cm), weight = numOrNull(body.weight_kg)
+  if (height === null && weight === null) throw new Error('身高和体重至少填写一项')
+  if ([height, weight].some((v) => v !== null && (!Number.isFinite(v) || v <= 0))) throw new Error('身高体重必须是大于 0 的数值')
+  const id = `${profileId}-G${Date.now().toString(36)}`
+  db.prepare(`INSERT INTO growth_measure (id,profile_id,date,height_cm,weight_kg,note,section_title,created_at) VALUES (?,?,?,?,?,?,?,?)`)
+    .run(id, profileId, date, height, weight, body.note || '手工录入', '身高体重', now())
+  return { ok: true, id, date }
 }
 
 export async function apply(ctx, config = {}) {
@@ -141,6 +156,7 @@ export async function apply(ctx, config = {}) {
       addTransfusion: () => { throw new Error(failure) },
       addFerritin: () => { throw new Error(failure) },
       addQuestion: () => { throw new Error(failure) },
+      addGrowth: () => { throw new Error(failure) },
     },
     version,
     prefix: API_PREFIX,

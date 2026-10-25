@@ -113,7 +113,7 @@ export function createApiHandler({ source, version, prefix = '' }) {
       if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' })
       return sendJson(res, 200, {
         ok: true, version, apiVersion: 'v1',
-        capabilities: ['health', 'bootstrap', 'transfusion', 'ferritin', 'question', 'cadence'],
+        capabilities: ['health', 'bootstrap', 'transfusion', 'ferritin', 'question', 'growth', 'cadence'],
       })
     }
 
@@ -153,6 +153,15 @@ export function createApiHandler({ source, version, prefix = '' }) {
       try {
         const body = await readJsonBody(req)
         return sendJson(res, 201, source.addQuestion(body))
+      } catch (error) {
+        return sendJson(res, 400, { error: String(error.message || error) })
+      }
+    }
+
+    if (path === `${prefix}/api/growth` && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req)
+        return sendJson(res, 201, source.addGrowth(body))
       } catch (error) {
         return sendJson(res, 400, { error: String(error.message || error) })
       }

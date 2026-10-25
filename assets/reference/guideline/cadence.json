@@ -1,0 +1,125 @@
+{
+  "_note": "G2 节奏层：只放结构化间隔与检查项，不放正文。纯函数 dsh/cadence.js 读它。三条边界：① 只算参考节点不排计划；② 不发提醒不弹通知；③ 不做分期判断。显示带宽是工作台口径，不是指南内容。",
+  "version": "2026-10-25",
+  "documents": [
+    {
+      "id": "cn-86-2025",
+      "version": "2025 年版",
+      "published": "2025"
+    },
+    {
+      "id": "tif-tdt-4th-2021",
+      "version": "4th Edition, Version 2.0",
+      "published": "2021"
+    },
+    {
+      "id": "tif-tdt-short-2022",
+      "version": "2nd edition",
+      "published": "2022"
+    }
+  ],
+  "band_note": "±30 天为工作台显示带宽，指南只写间隔；界面必须标注这句。",
+  "checks": [
+    {
+      "code": "ferritin",
+      "label": "血清铁蛋白",
+      "interval_months": 3,
+      "start": "transfusion_start",
+      "applies": "all",
+      "ref": "G1-05",
+      "confidence": "guideline",
+      "alternates": [
+        {
+          "doc": "cn-86-2025",
+          "interval_months": 1,
+          "ref": "G1-17",
+          "note": "中国指南要求「每月监测」，TIF 要求「至少每 3 个月」；两套并列，不自动取严"
+        }
+      ]
+    },
+    {
+      "code": "t2star_cardiac",
+      "label": "心铁 T2* MRI",
+      "interval_months": null,
+      "interval_by_last_value": {
+        "ge20": 24,
+        "10_19": 12,
+        "lt10": 6
+      },
+      "start": "age_9_or_transfusion_year_7",
+      "applies": "all",
+      "ref": "G1-07",
+      "confidence": "guideline",
+      "note": "分层频率按**上次数值**选；本轮不自动判档，档位由用户从报告原文里选（不写结论）",
+      "alternates": [
+        {
+          "doc": "cn-86-2025",
+          "interval_months": 12,
+          "ref": "G1-17",
+          "note": "中国指南写「每年检测肝铁浓度」；心铁频率见 TIF 分层"
+        }
+      ]
+    },
+    {
+      "code": "liver_iron",
+      "label": "肝铁 LIC",
+      "interval_months": null,
+      "start": "age_9",
+      "applies": "all",
+      "ref": "G1-08",
+      "confidence": "partial",
+      "note": "指南只给「regular LIC assessment」与 T2* 分层频率，**LIC 专属间隔未取得**（见 medical-evidence 未取得 #9）"
+    },
+    {
+      "code": "thyroid",
+      "label": "甲状腺功能",
+      "interval_months": 12,
+      "start_age_years": 9,
+      "applies": "all",
+      "ref": "G1-11",
+      "confidence": "guideline"
+    },
+    {
+      "code": "ogtt",
+      "label": "口服糖耐量（OGTT）",
+      "interval_months": 12,
+      "start_age_years": 10,
+      "applies": "all",
+      "ref": "G1-12",
+      "confidence": "guideline"
+    },
+    {
+      "code": "growth",
+      "label": "身高/体重/生长速度",
+      "interval_months": 6,
+      "start": "birth",
+      "applies": "all",
+      "ref": "G1-14",
+      "confidence": "guideline",
+      "alternates": [
+        {
+          "doc": "cn-86-2025",
+          "interval_months": 12,
+          "ref": "G1-23",
+          "note": "中国指南为「10 岁前开始监测」+ 项目清单，未给固定间隔"
+        }
+      ]
+    },
+    {
+      "code": "cardiac_function",
+      "label": "心电图 + 心脏超声",
+      "interval_months": 12,
+      "start": "transfusion_start",
+      "applies": "all",
+      "ref": null,
+      "confidence": "unverified",
+      "note": "T6 取到「每年 ECG+TTE」表述但未固定到单页（见医疗证据稿 T6），故 ref 留空并标 unverified"
+    }
+  ],
+  "drug_name_rules": [],
+  "unmatched_conditions": [
+    "按年输注量 >200 ml/kg/年 考虑切脾（G1-10）——需要完整年度输血量，本轮不自动匹配",
+    "心脏并发症者的更高输血目标 110–120 g/L（G1-03）——需要医生原文标注，不自动匹配",
+    "去铁暂停条件（铁蛋白<1000 或 肝铁<7，G1-18）——属处置原文，工作台**不自动提示停药**"
+  ]
+}

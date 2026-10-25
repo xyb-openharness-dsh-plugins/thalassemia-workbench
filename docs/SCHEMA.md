@@ -1,56 +1,74 @@
-# 数据主体—关系—表
+# SCHEMA · 数据模型设计（M3 落成 `schema/0001_initial.sql`）
 
-| 实体 | 稳定 ID | 主体/外键 | 核心字段/类型 | 约束/索引 | 来源/确认 | 生命周期 |
-| --- | --- | --- | --- | --- | --- | --- |
-| subject | ... | ... | ... | ... | ... | ... |
-| document | ... | subject | relative_path/hash/mime | ... | original | ... |
-| observation | ... | subject/metric_definition | time/value/unit | ... | candidate/confirmed | ... |
-| artifact | ... | task/snapshot | relative_path/hash/format | ... | template version | ... |
+> 本文件是设计意图。**唯一可执行定义是 `schema/0001_initial.sql`**，冻结后以 `schema/freeze-contract.md` 的 sha256 为准。
+> 四契约（starter 04 号）：① 看法恒不为结论；② 分类不进趋势；③ 更正只新增版本；④ 事实四层不合并。
 
-实体图：...
-扩展策略：定义目录新增 vs 结构迁移的边界；核心关系不塞入任意 JSON。
-迁移 ledger/旧库 fixture/备份/事务/回滚兼容：...
-数据根选择、相对路径校验、公共数据和私人数据分离：...
-统一读模型与跨页一致性验收：...
+## 一、分层（事实四层，不许合并）
 
-## 持久化与记忆选型（互动确认）
+```
+文档 docs ──(抽取)──> 候选 candidates ──(用户核对)──> 记录 records ──(派生)──> 指标 metrics
+```
 
-等级 A/B/C/D 与理由：...
-预计规模/增长、常用查询、并发写入者、离线要求：...
-SQLite 或 JSON 的实际运行条件与备选方案：...
+- `docs`：原始文件（PDF/照片），只存路径 + sha256 + 导入时间，**进候选之前不改写内容**。
+- `candidates`：AI/MinerU 抽出的字段值，带 `status ∈ {pending, accepted, rejected}`；未 accepted 的不进读模型。
+- `records`：用户确认过的事实（输血、方案、报告、生长、筛查、抗体、费用、问题）。
+- `metrics`：只有"数值型"与"分类型"两种取值，供趋势图使用。
 
-| 数据类别 | 权威位置/格式 | 读写责任 | 来源/revision | 索引/失效/保留规则 |
-| --- | --- | --- | --- | --- |
-| 已确认业务事实 | ... | ... | ... | ... |
-| 文件与产物 | ... | ... | ... | ... |
-| 偏好/摘要/检索记忆（可选） | ... | ... | ... | ... |
-| 可重建内存缓存/派生索引 | ... | ... | ... | ... |
+## 二、表清单（档案级 1 + 通用 3 + 专属 9）
 
-同步：提交后更新、幂等键、重试、积压可见性：...
-检索：主体/工作区过滤、来源核对、过期与冲突处理：...
-纠正/删除：缓存与记忆失效、删除传播：...
-外部记忆的实际 API/版本/部署/发送范围；不可用时的本地路径：...
-性能证据：代表数据、查询延迟/启动、内存测量与目标：...
-确认人/日期、未决项及对应验收 ID：...
+| 表 | 作用 | 关键列 | 说明 |
+| --- | --- | --- | --- |
+| `profile` | 档案级 | `id, display_name, relation, sex, birth_date, dx_date, genotype_text, transfusion_start, section_title` | `relation ∈ {self, caregiver}`（R3 双视角） |
+| `docs` | 通用 | `id, profile_id, filename, kind, sha256, imported_at, note` | `sha256` 去重 |
+| `candidates` | 通用 | `id, doc_id, field, value, status, page_no, created_at` | 三态；`accepted` 才落记录 |
+| `metrics` | 通用 | `id, profile_id, kind, code, date, value_num, value_text, unit, ref_low, ref_high, dec, ord, in_use` | `kind ∈ {numeric, qual}`；`dec` 分类值列、`ord` 手写排序 |
+| `transfusion` | 专属 | `id, profile_id, date, hb_before, units, volume_ml, product_type, reaction_text, site, section_title` | 一次输血一行；间隔**不落库** |
+| `iron_lab` | 专属 | `id, profile_id, date, ferritin, ref_low, ref_high, lab_name, report_text, section_title` | `report_text` 存原文摘录 |
+| `chelation_plan` | 专属 | `id, profile_id, drug_text, dose_text, route, start_date, end_date, change_reason, in_use, section_title` | 换药只新增行，不覆盖旧行 |
+| `t2star_report` | 专属 | `id, profile_id, date, organ, t2star_ms, report_text, hospital, section_title` | `organ ∈ {heart, liver}`；**不存判读结论列** |
+| `growth_measure` | 专属 | `id, profile_id, date, height_cm, weight_kg, age_months, note, section_title` | 百分位**不落库**（读取时按参考标准算） |
+| `screening_item` | 专属 | `id, profile_id, item_text, category, planned_date, done_date, result_text, source_text, section_title` | `category ∈ {annual, endocrine, cardiac, infection}` |
+| `antibody_record` | 专属 | `id, profile_id, date, antibody_text, crossmatch_text, note, section_title` | 只记报告原文 |
+| `cost_record` | 专属 | `id, profile_id, date, category, amount_cents, insurance_flag, note, section_title` | 整数分；`category ∈ {transfusion, chelation, other}` |
+| `question_item` | 专属 | `id, profile_id, text, source_page, status, created_at, section_title` | 就诊问题清单条目，`source_page` 指回来源页 |
 
-## 前端与业务流程变化矩阵（建库前必填）
+## 三、硬约束落到列
 
-领域事实/关系、工作流定义与实例、页面读模型/偏好边界：...
-稳定ID/revision、流程定义版本/已有实例、状态转换与跳过/重开/取消语义：...
+| 约束 | 落法 |
+| --- | --- |
+| 无判读列 | 全表**不得出现** `diagnosis / risk_level / severity / grade_auto / is_conclusion / is_normal`；`check-schema.mjs` 断言 PRAGMA 结果 |
+| 显式 null | 所有可空列显式写 `NULL`；读模型按 `=== null` 分支 |
+| 保留字 | `in_use`（不用 `using`） |
+| 分节标题 | 每个 `{title, rows}` 节对应列 `section_title` |
+| 分类不进趋势 | `metrics.kind='qual'` 的行不参与 `smoothPath`；`dec IS NOT NULL` 时 `value_num IS NULL` |
+| 排序 | 复合主键表裸 `SELECT` 一律 `ORDER BY rowid`；手写倒序只 `ORDER BY ord` |
+| 参考值 | `iron_lab.ref_low/ref_high` 可空；有值时必须 `ref_high >= ref_low`（写入校验） |
+| 迁移 | `0001` 冻结；后续 `0002_*.sql` 只增 |
+| 派生不落库 | 输血间隔、百分位、逾期天数、累计输血次数全部读取时算 |
 
-| 变化情境 | 不变的事实/关系 | 配置/投影/API变化 | 迁移/旧记录读取与恢复 | 验收证据 |
-| --- | --- | --- | --- | --- |
-| 改导航/布局/同一事实多视图 | ... | ... | ... | ... |
-| 新字段/指标/可选记录类型 | ... | ... | ... | ... |
-| 步骤插入/跳过/重开/并行 | ... | ... | ... | ... |
-| 来源更正/删除/摘要与缓存失效 | ... | ... | ... | ... |
-| 旧数据库/旧API客户端升级 | ... | ... | ... | ... |
+## 四、读模型形状（与原型逐字符对齐）
 
-不把UI模拟数据当表，不为每个步骤复制事实；不通过无限JSON、重置库或无理由的全量事件溯源代替设计。详见docs/14-HTML-AND-DATA-CONTRACT.md。
+`GET /api/bootstrap` 返回：
 
+```json
+{
+  "profile": { "id": "...", "name": "...", "relation": "caregiver", "headline": "...", "mindset": "...",
+               "dash_keys": ["hb", "ferritin", "height"] },
+  "transfusion": { "section_title": "输血记录", "rows": [["2026-10-12", "78", "2U", "无", "..."]], "summary": {} },
+  "iron": { "section_title": "铁蛋白趋势", "rows": [] },
+  "growth": { "section_title": "身高体重", "rows": [] },
+  "screening": { "section_title": "年度清单", "rows": [] },
+  "questions": { "section_title": "就诊问题", "rows": [] },
+  "events": [ { "date": "...", "kind": "transfusion" } ],
+  "docs": [], "candidates": [],
+  "generated_at": "2026-10-25T00:00:00+08:00", "data_end": "2026-10-25"
+}
+```
 
-## UI/流程变化的承受能力（必填）
+- `events` / `docs` / `candidates` 是**定长数组**（parity 依赖）。
+- 分类值走 `dec`，不补 `unit` 键（原型没有就不许补）。
 
-领域实体/证据/主体/状态/版本是稳定核心；UI通过命令用例写入和版本化读模型读取。不能按Tab复制事实或把整页state当业务存储。列出：页面拆合/移位、流程先后改变、新增普通指标、来源更正、候选→接受、未知字段/枚举、隐私派生与快照失效时需要改哪层、是否迁移、兼容/恢复方式。
+## 五、本轮不建的表
 
-HTML确认前是候选模型/模拟adapter，确认对应模块后复核并落实生产schema/API；仅布局/字段顺序变化不能迫使用户清库。JSON扩展有类型/schema/version/上限，核心关系保留外键与约束；写入有revision/幂等/事务。记录真实迁移/并发/故障证据，未执行标未验证。
+`treatment_line`（无治疗线）、`staging`（无分期）、`ctcae_grade`（不判读）、`reminder`（不发通知）。
+理由见 `docs/DIFF-MATRIX.md` §四 与 `docs/METRIC-GRADING.md`。

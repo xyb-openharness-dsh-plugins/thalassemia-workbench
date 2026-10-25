@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小铁宝 FerroPal · 重型地中海贫血工作台原型 v0.2</title>
+<!-- 内联 favicon：file:// 或单目录托管时不给 favicon 会在控制台留一条 404 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f57'/%3E%3Ctext x='16' y='23' font-size='18' font-family='PingFang SC,Helvetica,sans-serif' font-weight='700' fill='%23fff' text-anchor='middle'%3E%E9%93%81%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<div class="proto-bar"><span><b>交互原型 v0.2</b> · 全部为模拟资料，不含真实病历</span><span>仅本页演示 · 刷新重置 · 未接入 DSH / AI</span></div>
+
+<div class="app" id="app">
+  <!-- 三段式顶栏：左 品牌+档案 / 中 页签 / 右 AI+设置 -->
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">铁</span>
+        <span class="brand-text"><strong>小铁宝</strong><em>FerroPal</em></span>
+      </div>
+      <button class="profile-btn" id="profile-btn" aria-label="切换演示档案" aria-haspopup="dialog">
+        <span class="avatar" id="profile-avatar" aria-hidden="true">宇</span>
+        <span class="profile-text"><b id="profile-name">小宇</b><em id="profile-meta">6 岁 · 输血依赖</em></span>
+        <span aria-hidden="true">⌄</span>
+      </button>
+    </div>
+    <nav class="tb-mid" id="nav" aria-label="一级导航"></nav>
+    <div class="tb-right">
+      <button class="chip" id="agent-toggle" data-act="agent" aria-expanded="false" aria-label="打开右侧 AI 对话">
+        <i class="dot" id="agent-dot"></i><span id="agent-label">AI 对话</span>
+      </button>
+      <button class="chip" data-act="settings" aria-label="打开设置">设置</button>
+      <button class="chip" id="font-toggle" aria-pressed="false" title="切换大字">大字 Aa</button>
+      <button class="chip ver" data-act="about" id="ver-chip">v0.2.0</button>
+    </div>
+  </header>
+
+  <div class="body" id="body">
+    <main id="main" tabindex="-1"></main>
+    <div id="agent-splitter" role="separator" aria-orientation="vertical" tabindex="0"
+         aria-label="拖动调整 AI 面板宽度" aria-valuemin="25" aria-valuemax="45" aria-valuenow="35" hidden></div>
+    <aside id="agent-dock" class="agent-dock" aria-label="AI 对话面板" hidden>
+      <div class="agent-head">
+        <span class="dot" id="agent-dot2"></span><b>AI 对话</b>
+        <span class="agent-note" id="agent-note">未连接 DSH 会话（原型模拟）</span>
+        <div class="agent-sizes" role="group" aria-label="面板宽度">
+          <button data-act="agent-size" data-size="25" aria-pressed="false">窄</button>
+          <button data-act="agent-size" data-size="35" aria-pressed="true">标准</button>
+          <button data-act="agent-size" data-size="45" aria-pressed="false">宽</button>
+        </div>
+        <button class="icon-btn" id="agent-hide" data-act="agent" aria-label="收起 AI 面板">×</button>
+      </div>
+      <div class="agent-body" id="agent-body"></div>
+      <div class="agent-foot">
+        <input id="agent-input" type="text" placeholder="说出你要记的事，例如「昨天输了 2U，输前 78」" aria-label="向 AI 描述要记录的事">
+        <button class="primary" data-act="agent-send">发送</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="footer">
+    <span>小铁宝 · 和地贫家庭一起，把输血、排铁与复查记成可以带走的材料</span>
+    <span class="ver-line"><b id="app-version">v0.2.0</b><em id="app-build">2026-10-25</em></span>
+  </footer>
+</div>
+
+<dialog id="dialog" aria-labelledby="dialog-title">
+  <div class="dialog-head">
+    <div><span class="eyebrow" id="dialog-eyebrow">小铁宝</span><h2 id="dialog-title"></h2></div>
+    <button class="icon-btn" data-act="close" aria-label="关闭">×</button>
+  </div>
+  <div id="dialog-body" class="dialog-body"></div>
+  <div id="dialog-foot" class="dialog-foot"></div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

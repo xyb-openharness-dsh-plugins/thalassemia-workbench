@@ -1,0 +1,42 @@
+{
+  "note": "指南原件登记。guidebooks/ 不进 package.json files；npm pack 清单里不得出现 PDF。",
+  "generated_at": "2026-10-25",
+  "documents": [
+    {
+      "id": "cn-86-2025",
+      "title": "86 个罕见病病种诊疗指南（2025 年版）· 78. 地中海贫血（重型）",
+      "edition": "2025 年版",
+      "published": "2025",
+      "org": "国家卫生健康委员会",
+      "file": "guidebooks/86-rare-disease-2025.pdf",
+      "sha256": "d03fe69585320fea7938bf85bea9ec346a3d5d7671c7d8627fff8393679bbfef",
+      "pdf_pages": 517,
+      "url": "https://www.nhc.gov.cn/",
+      "allowed_use": "引用页码与 ≤200 字符摘录；不复制正文；原件不入包"
+    },
+    {
+      "id": "tif-tdt-4th-2021",
+      "title": "Guidelines for the Management of Transfusion Dependent Thalassaemia (TDT)",
+      "edition": "4th Edition, Version 2.0",
+      "published": "2021",
+      "org": "Thalassaemia International Federation",
+      "file": "guidebooks/tif-tdt-4th-2021.pdf",
+      "sha256": "a0b8019d06525e61ae5e500c83f1f86fedd66a09e1bc52a816094fb1e08eaf8d",
+      "pdf_pages": 351,
+      "url": "https://thalassaemia.org.cy/wp-content/uploads/2021/06/TDT-4TH-EDITION-Version-2.0.pdf",
+      "allowed_use": "引用页码与 ≤200 字符摘录；不复制正文；原件不入包"
+    },
+    {
+      "id": "tif-tdt-short-2022",
+      "title": "Management of Transfusion Dependent Thalassaemia (TDT) — A SHORT GUIDE",
+      "edition": "2nd edition",
+      "published": "2022",
+      "org": "Thalassaemia International Federation",
+      "file": "guidebooks/tif-tdt-short-2022.pdf",
+      "sha256": "4645f7edb586b23daada196a7f32ef2630545d664d1116bf709df2e7e54d6a04",
+      "pdf_pages": 152,
+      "url": "https://thalassaemia.org.cy/wp-content/uploads/2022/08/TDT-GUIDE-2022-FOR-web.pdf",
+      "allowed_use": "引用页码与 ≤200 字符摘录；不复制正文；原件不入包"
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "_note": "G1 出处层：只放页码 + ≤200 字符摘录 + 表号，不放正文。原件 PDF 在 guidebooks/（不入包，files 白名单不含它）。三处登记（本文件 / cadence.json / guidebooks/manifest.json）的 id/version/published/sha256 必须逐字一致，由 test/guideline.test.mjs 钉住。",
+  "documents": [
+    {
+      "id": "cn-86-2025",
+      "title": "86 个罕见病病种诊疗指南（2025 年版）· 78. 地中海贫血（重型）",
+      "edition": "2025 年版",
+      "published": "2025",
+      "org": "国家卫生健康委员会",
+      "isbn13": null,
+      "pmid": null,
+      "url": "https://www.nhc.gov.cn/",
+      "pdf_pages": 517,
+      "sha256": "d03fe69585320fea7938bf85bea9ec346a3d5d7671c7d8627fff8393679bbfef",
+      "file": "guidebooks/86-rare-disease-2025.pdf",
+      "verbatim": "逐字摘录，≤200 字符",
+      "page_note": "page_pdf = PDF 页序号；page_print = 页脚印的印刷页（本节 PDF p470 = 印刷 p466）"
+    },
+    {
+      "id": "tif-tdt-4th-2021",
+      "title": "Guidelines for the Management of Transfusion Dependent Thalassaemia (TDT)",
+      "edition": "4th Edition, Version 2.0",
+      "published": "2021",
+      "org": "Thalassaemia International Federation",
+      "isbn13": "9789963717187",
+      "pmid": "38683909",
+      "url": "https://thalassaemia.org.cy/wp-content/uploads/2021/06/TDT-4TH-EDITION-Version-2.0.pdf",
+      "pdf_pages": 351,
+      "verbatim": "逐字摘录，≤200 字符",
+      "page_note": "page_pdf = 下载所得 PDF 页序号；page_print = 页脚印的印刷页",
+      "sha256": "a0b8019d06525e61ae5e500c83f1f86fedd66a09e1bc52a816094fb1e08eaf8d",
+      "file": "guidebooks/tif-tdt-4th-2021.pdf"
+    },
+    {
+      "id": "tif-tdt-short-2022",
+      "title": "Management of Transfusion Dependent Thalassaemia (TDT) — A SHORT GUIDE",
+      "edition": "2nd edition",
+      "published": "2022",
+      "org": "Thalassaemia International Federation",
+      "isbn13": null,
+      "pmid": null,
+      "url": "https://thalassaemia.org.cy/wp-content/uploads/2022/08/TDT-GUIDE-2022-FOR-web.pdf",
+      "pdf_pages": 152,
+      "verbatim": "逐字摘录，≤200 字符",
+      "page_note": "短指南印刷页普遍为 PDF 页 − 2",
+      "sha256": "4645f7edb586b23daada196a7f32ef2630545d664d1116bf709df2e7e54d6a04",
+      "file": "guidebooks/tif-tdt-short-2022.pdf"
+    }
+  ],
+  "refs": [
+    {
+      "id": "G1-01",
+      "doc": "tif-tdt-short-2022",
+      "topic": "transfusion_target",
+      "page_pdf": 26,
+      "page_print": 24,
+      "table": null,
+      "excerpt": "…usually administered every two to five weeks, to maintain the pre-transfusion haemoglobin level 90-105 g/L.",
+      "note": "输血间隔与输血前 Hb 目标：短指南口径 2–5 周 / 90–105 g/L"
+    },
+    {
+      "id": "G1-02",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "transfusion_target",
+      "page_pdf": 44,
+      "page_print": 43,
+      "table": null,
+      "excerpt": "usually administered every two to four weeks, to maintain the pre-transfusion haemoglobin level 95-105 g/l.",
+      "note": "4th ed 口径与短指南下限不一致（95 vs 90），两套并列，**不替用户取值**"
+    },
+    {
+      "id": "G1-03",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "transfusion_target_high",
+      "page_pdf": 45,
+      "page_print": 44,
+      "table": null,
+      "excerpt": "A higher target pre-transfusion haemoglobin level of 110-120 g/l may be appropriate for patients with heart disease",
+      "note": "心脏并发症患者的更高目标（原文 may be appropriate，非强制）"
+    },
+    {
+      "id": "G1-04",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "transfusion_volume",
+      "page_pdf": 45,
+      "page_print": 44,
+      "table": "Table 4",
+      "excerpt": "(Desired – actual Hb (g/l)) x weight (kg) x 0.3 = ml to be transfused assuming the haematocrit of the unit is 0.58",
+      "note": "输注量公式（假定单位血细胞比容 0.58）；表 4 另给按目标升幅与 Hct 的查表值"
+    },
+    {
+      "id": "G1-05",
+      "doc": "tif-tdt-short-2022",
+      "topic": "ferritin_frequency",
+      "page_pdf": 34,
+      "page_print": 32,
+      "table": null,
+      "excerpt": "SF concentration is measured at least every 3 months (1-3 months). Target value is currently between 500-1000 μg/l.",
+      "note": "血清铁蛋白至少每 3 个月；目标区间 500–1000 µg/L。**工作台不据此判读**，只做提醒与出处"
+    },
+    {
+      "id": "G1-06",
+      "doc": "tif-tdt-short-2022",
+      "topic": "t2star_tiers",
+      "page_pdf": 36,
+      "page_print": 34,
+      "table": "Table 2",
+      "excerpt": "No cardiac iron, low risk of heart failure ≥ 20 milliseconds / Mild to moderate cardiac iron 10–19 / High cardiac iron 6–9 / High cardiac iron, high risk of HF < 6 milliseconds",
+      "note": "心铁 T2* 分档（表 2 写明引自 UK Standards 3rd ed 2016）。工作台**不展示分档结论**，只存数值与报告原文"
+    },
+    {
+      "id": "G1-07",
+      "doc": "tif-tdt-short-2022",
+      "topic": "t2star_frequency",
+      "page_pdf": 36,
+      "page_print": 34,
+      "table": "Table 2",
+      "excerpt": "Stable T2* >20 milliseconds: two yearly / T2* 10-19 milliseconds: yearly / T2* <10 milliseconds: 6 monthly",
+      "note": "心铁复查频率（按上次数值分层）"
+    },
+    {
+      "id": "G1-08",
+      "doc": "tif-tdt-short-2022",
+      "topic": "mri_start_age",
+      "page_pdf": 36,
+      "page_print": 34,
+      "table": null,
+      "excerpt": "LIC and myocardial iron should be monitored regularly in patients from age 9 or younger if they are able to tolerate MRI scanning without sedation.",
+      "note": "起测年龄 9 岁（能配合不需镇静者可更早）"
+    },
+    {
+      "id": "G1-09",
+      "doc": "tif-tdt-short-2022",
+      "topic": "lic_thresholds",
+      "page_pdf": 61,
+      "page_print": 59,
+      "table": null,
+      "excerpt": "LIC values greater than 7 and 15 mg/g dry weight are associated with moderate and severe iron overload, respectively",
+      "note": "肝铁 LIC 的 7 / 15 mg/g dw 分界（原文 association，非诊断标准）"
+    },
+    {
+      "id": "G1-10",
+      "doc": "tif-tdt-short-2022",
+      "topic": "splenectomy_volume",
+      "page_pdf": 28,
+      "page_print": 26,
+      "table": null,
+      "excerpt": "as the annual transfusion requirements rise above 200 ml/kg/year of pure red cells, splenectomy may be considered",
+      "note": "年输注量 >200 ml/kg/年（纯红细胞）作为切脾考量线之一；工作台只记录年输注量"
+    },
+    {
+      "id": "G1-11",
+      "doc": "tif-tdt-short-2022",
+      "topic": "thyroid_annual",
+      "page_pdf": 77,
+      "page_print": 75,
+      "table": null,
+      "excerpt": "Investigation of thyroid function should be performed annually, beginning at the age of 9 years (unless symptomatic hypothyroidism is observed).",
+      "note": "甲状腺功能：9 岁起每年"
+    },
+    {
+      "id": "G1-12",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "ogtt_annual",
+      "page_pdf": 66,
+      "page_print": 65,
+      "table": null,
+      "excerpt": "diabetes mellitus (yearly oral glucose tolerance test (OGTT)), hypothyroidism and hypoparathyroidism.",
+      "note": "每年 OGTT；起始年龄见 G1-13"
+    },
+    {
+      "id": "G1-13",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "ogtt_start_age",
+      "page_pdf": 155,
+      "page_print": 154,
+      "table": null,
+      "excerpt": "The oral glucose tolerance test (OGTT) should be done in every patient with thalassaemia after the age of ten or earlier if needed",
+      "note": "OGTT 起始年龄 10 岁（必要时更早）"
+    },
+    {
+      "id": "G1-14",
+      "doc": "tif-tdt-4th-2021",
+      "topic": "growth_every_6_months",
+      "page_pdf": 147,
+      "page_print": 146,
+      "table": null,
+      "excerpt": "Patients' growth should be assessed every 6 months by accurate measurement of standing and sitting height and weight.",
+      "note": "生长：每 6 个月量站高、坐高与体重"
+    },
+    {
+      "id": "G1-15",
+      "doc": "tif-tdt-short-2022",
+      "topic": "short_stature_reference",
+      "page_pdf": 68,
+      "page_print": 66,
+      "table": null,
+      "excerpt": "Short stature – height below the 3rd centile for sex and age (based on national growth charts), and/or Slow growth rates – growth velocity expressed in cm/year, below 1 SD for age and sex",
+      "note": "矮小与生长速度的表述（供术语页引用；工作台**不判读**是否矮小）"
+    },
+    {
+      "id": "G1-16",
+      "doc": "cn-86-2025",
+      "topic": "transfusion_regimen_cn",
+      "page_pdf": 472,
+      "page_print": 466,
+      "table": null,
+      "excerpt": "推荐的方案为：①在 Hb<90g/L 时启动输血计划；②每 2～5 周输血 1 次，每次输红细胞 0.5～1U/10kg，时间为 2～4 小时；③通过输血将 Hb 维持在 90～140g/L",
+      "note": "中国口径：启动阈值 90 g/L、间隔 2–5 周、量 0.5–1U/10kg、维持 90–140 g/L"
+    },
+    {
+      "id": "G1-17",
+      "doc": "cn-86-2025",
+      "topic": "chelation_start_cn",
+      "page_pdf": 472,
+      "page_print": 466,
+      "table": null,
+      "excerpt": "当输血≥10 次、血清铁蛋白>1000μg/L 或肝铁浓度>7mg/g 干重时，应启动祛铁治疗，并每月监测血清铁蛋白，每年检测肝铁浓度。",
+      "note": "中国口径：祛铁启动条件 + **每月**监测铁蛋白（与 TIF「至少每 3 个月」形成并列，不取严）"
+    },
+    {
+      "id": "G1-18",
+      "doc": "cn-86-2025",
+      "topic": "chelation_pause_cn",
+      "page_pdf": 472,
+      "page_print": 466,
+      "table": null,
+      "excerpt": "当血清铁蛋白<1000μg/L 或肝铁浓度<7mg/g 干重时，可暂停使用铁螯合剂。",
+      "note": "中国指南原文的暂停条件。**这是处置原文，工作台只引用不执行、不建议**"
+    },
+    {
+      "id": "G1-19",
+      "doc": "cn-86-2025",
+      "topic": "treatment_options_cn",
+      "page_pdf": 472,
+      "page_print": 466,
+      "table": null,
+      "excerpt": "目前针对地中海贫血（重型）的治疗方法有以下 3 种：①规范性输血和祛铁治疗（需终生维持）；②造血干细胞移植（可治愈疾病但依赖配型和患者的身体状况）；③基因治疗及新药治疗（已取得重要进展，但成为临床常规尚需时日）。",
+      "note": "三种治疗路径的官方表述——用于「治愈性治疗」资料夹的范围界定，不做方案比较"
+    },
+    {
+      "id": "G1-20",
+      "doc": "cn-86-2025",
+      "topic": "hsct_age_cn",
+      "page_pdf": 472,
+      "page_print": 466,
+      "table": null,
+      "excerpt": "有条件的患者应尽早（2～7 岁）接受移植；②供体选择：以人类白细胞抗原（HLA）配型选择供体",
+      "note": "移植年龄与配型表述（原文）；工作台只做问题清单，不推荐移植"
+    },
+    {
+      "id": "G1-21",
+      "doc": "cn-86-2025",
+      "topic": "splenectomy_age_cn",
+      "page_pdf": 473,
+      "page_print": 469,
+      "table": null,
+      "excerpt": "建议行脾切除术时患儿年龄≥5 岁，5 岁以下进行脾切除会增加严重败血症发生的风险。",
+      "note": "切脾年龄下限与感染风险（原文）"
+    },
+    {
+      "id": "G1-22",
+      "doc": "cn-86-2025",
+      "topic": "prenatal_window_cn",
+      "page_pdf": 473,
+      "page_print": 469,
+      "table": null,
+      "excerpt": "如夫妇双方均为 β 地贫基因携带者，可于妊娠第 8～12 周吸取绒毛，或妊娠第 16～20 周抽取羊水分离脱落细胞，或妊娠第 20 周后抽取脐带血",
+      "note": "产前诊断的三个时间窗（中国指南原文）——F06 遗传页的「医生说的时点」对照用"
+    },
+    {
+      "id": "G1-23",
+      "doc": "cn-86-2025",
+      "topic": "growth_monitor_cn",
+      "page_pdf": 474,
+      "page_print": 470,
+      "table": null,
+      "excerpt": "推荐患儿 10 岁前开始监测生长发育及内分泌系统水平。建议体格检查与功能状态评估项目：身高、体重、头围、胸围、眼距、骨龄、维生素 D",
+      "note": "生长与内分泌监测的起始年龄与项目清单（中国口径）"
+    },
+    {
+      "id": "G1-24",
+      "doc": "cn-86-2025",
+      "topic": "endocrine_burden_cn",
+      "page_pdf": 474,
+      "page_print": 470,
+      "table": null,
+      "excerpt": "有报道指出约 1/3 重型β 地贫患者在 10 岁时已经发生内分泌并发症，在 2～9 岁患者群体中 30.5%存在内分泌疾病。",
+      "note": "内分泌并发症的比例表述（原文引用，不做预后推断）"
+    }
+  ]
+}

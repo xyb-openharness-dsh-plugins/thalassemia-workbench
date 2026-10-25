@@ -1,6 +1,6 @@
 {
   "name": "@ferropal-dsh/thalassemia-workbench",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "本机优先的重型地中海贫血（输血依赖型）输血—去铁循环、血清铁蛋白与生长发育随访、遗传与生育咨询准备工作台",
   "private": true,
   "type": "module",
@@ -54,5 +54,8 @@
   "engines": {
     "node": ">=22"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "puppeteer-core": "^25.16.0"
+  }
 }

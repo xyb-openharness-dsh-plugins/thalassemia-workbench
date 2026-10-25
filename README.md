@@ -1,44 +1,92 @@
-# 小铁宝 FerroPal · 重型地中海贫血工作台
+# 小铁宝 FerroPal · 重型地中海贫血（输血依赖型）工作台
 
-本机优先的重型地中海贫血（输血依赖型）输血—去铁循环、血清铁蛋白与生长发育随访、遗传与生育咨询准备工作台
+给地贫家庭用的信息整理工具：**记输血、记铁蛋白、记生长、把复诊材料理出来**。
+不做诊断、不给治疗与用药建议、不判断指标高低、不预测预后。数据全部在本机。
 
-这是接入骨架，尚未实现真实业务。初始化后先将 [项目设计提示词](docs/DESIGN-PROMPT.md) 交给当前Agent；它应展示实际路径并以已有用户/场景/流程素材对齐设计者、研究与取舍原则。癌种项目另有 [完整专用提示词](prompts/NEW-CANCER-WORKBENCH.md)。需求见 [BRIEF](docs/BRIEF.md)，规格见 [SPEC](docs/SPEC.md)，任务见 [TASKS](docs/TASKS.md)；先读 [AGENTS](AGENTS.md)。CLI输出交接与首问，实际对话由Agent接续。
+- 原型版本 **v0.2**（可 `file://` 直接打开）· 包版本 `0.2.0` · 构建 2026-10-25
+- 样板基准：`cervical-workbench`（client 链路）· 成熟基准：`breast-cancer-workbench`（26 号口径）
+- 认领 Issue：[#34](https://github.com/xyb-openharness-dsh-plugins/.github/issues/34)
 
-## 开发顺序
+> **本轮诚实边界（先读再往下看）**
+> ① **0 访谈**：所有患者场景句都是 `hypothesis`（疾病轴推导），界面已标「假设句 · 未经访谈核实」；
+> ② **指南已取得原件**：G1 出处层（24 条，含页码/表号/≤200 字符摘录）与 G2 节奏层已启用；
+> **G3 分级层有意不启用**（不判读，见 [METRIC-GRADING](docs/METRIC-GRADING.md)）；
+> ③ 临床试验库**未查过**（本机无统一检索工具）；④ MinerU **未实测**；⑤ 装机 V2/V3 **未做**。
 
-先共创SPEC和候选数据关系，再交付HTML交互工作台；由用户确认对应版本/模块后，复核SCHEMA/API并实现生产功能。确认记录见docs/PROTOTYPE-REVIEW.md；模型不依赖前端Tab/流程。模板骨架不是业务已确认。
+## 关键功能
 
-## 当前能力
+**看板：回答"今天该做什么"**——距上次输血多少天、铁蛋白上次什么时候记的、还有几条问题要问；下面是 12 个入口，点进去、回来还是这页。
+![看板：倒计时、待办与入口区](docs/screenshots/readme-dashboard-0.2.0.png)
 
-- 一个 DSH 工作台注册、认证的健康接口、版本展示与标准/大字切换。
-- 已明确选择布局：business-first。business-first 使用 customFrame；模板不创建会话或复制聊天。需要 AI 协助时按官方合同接入原生 conversation 和会话管理。
-- 无业务数据库、无演示患者、无真实密钥；所有业务页按确认 spec 逐项实现。
+**输血本 · 周期与间隔**——每 2–4 周一次的输血，最后只剩"上次是哪天"能记住。这里把间隔算成一条线，并明说"显示带宽是工作台口径，不是医嘱"。
+![输血间隔趋势](docs/screenshots/readme-transfusion-interval-0.2.0.png)
 
-## 开发与本地验收
+**铁负荷与排铁 · 铁蛋白趋势**——只画你自己的数字，**不画阈值线**；底部短竖线是当天发生的事（输血/复查），分类事件不进曲线。
+![铁蛋白趋势与事件标记](docs/screenshots/readme-iron-trend-0.2.0.png)
 
-需要 Node.js 22+、Git、包管理器和可用 DSH Desktop；采用 SQLite 时另核验 node:sqlite 版本条件。宿主 peers 的范围仅是模板基线，请与目标 Desktop 实际依赖核对。
+**生长发育**——身高曲线 + "约第几百分位"，并常驻一句"参考值未经指南/标准核对"；页面不判断"矮不矮"。
+![生长发育曲线](docs/screenshots/readme-growth-0.2.0.png)
+
+**折叠卡（收起态）**——一次住院/一次输血 episode 收起成一行摘要 + 次数。
+![折叠卡收起态](docs/screenshots/readme-fold-closed-0.2.0.png)
+
+**折叠卡（展开态）**——展开后明细在同一张卡里，不撑破一屏。
+![折叠卡展开态](docs/screenshots/readme-fold-open-0.2.0.png)
+
+**AI 只出候选，你点头才入档**——AI 把话整理成一条候选，点「对，入档」才写记录；点「不对，拒收」零副作用。
+![AI 候选核对](docs/screenshots/readme-agent-candidate-0.2.0.png)
+
+**窄宽 760px**——顶栏换行但导航保留文字，标签不竖排、不横向溢出。
+![窄宽 760 布局](docs/screenshots/readme-narrow-760-0.2.0.png)
+
+**病情一图秀**——输血、铁蛋白、身高放回同一段时间；不同量纲同图只用于看"时间上有没有一起动"。
+![病情一图秀](docs/screenshots/readme-timeline-0.2.0.png)
+
+**就诊准备 · 问题清单**——每条问题带来源页，导出的 Markdown 里也带；这是这个工作台真正要交付的东西。
+![就诊问题清单](docs/screenshots/readme-review-questions-0.2.0.png)
+
+## 怎么用
+
+原型（现在就能看）：
 
 ```bash
-npm install
-npm run check
-npm run pack:check
-npm pack
+open ~/Downloads/thalassemia-workbench/prototypes/v0.2/index.html   # file:// 直开，无构建
 ```
 
-`npm run check` 只保证"能装"（语法 + 装包合同），第一天就该是绿的。`npm run audit` 管"还是不是家族里的一员"：版本三处一致、`lib/layout.js` 面板参数单一来源、检查链完整、文档与密钥卫生，**只看代码与文件，不看文档自述**。新项目刚生成时 audit 必然有 fail，那是待办清单；交付/发布前必须清零，存在 fail 不得发布（`npm run release:check` 一次跑完两者）。
+装机（M6 之后才成立，现在**未做**）：
 
-跑的时间点：**每次改完**跑 `check`；**G2 原型确认后、写业务代码前**先跑一次 `audit`（这时缺的多是 `lib/layout.js`、`VERSION` 这类结构，越早补越便宜）；**交付/装机前**必须跑 `release:check`；**发布或投稿前**把 `npm run audit --json` 的 `xx/xx 通过 · N 失败 · M 待人工` 抄进 `docs/RELEASE.md` 的「家族一致性」一行。`✗` 是结构缺口（补齐，或在 `docs/DEV-REQUIREMENTS-<日期>.md` 写明偏离理由并由用户确认），`!` 是需人工判断的项（逐条给「已人工确认 / 确实没有」）。
+```bash
+# 目标版本发布后，用 release/ 里的 tgz 装进 Desktop 的 harness profile；
+# 装完必须重启，并在**新建会话**里打开工作台（宿主按会话授权）。
+```
 
-`npm install` 可能按 npm 策略解析 peer；勿为消警告重复打包宿主 runtime。客户端本身是单文件；引入 TS/组件库后需添加构建步骤并保留单文件导出。
+## 数据与口径
 
-本地安装入口以当前 Desktop/CLI 帮助为准。安装后按 [docs/06-VALIDATION-AND-RELEASE.md](docs/06-VALIDATION-AND-RELEASE.md) 与官方自测完成真实 UI 验收，并填写 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)。静态检查不代表已加载。
+- 演示数据**唯一源**：`demo/build-demo-data.mjs` → 同时产出 `demo/demo-data.sqlite` 与 `prototypes/v0.2/demo-data.js`；
+  重跑字节一致（固定种子 + 固定窗口 `2026-10-25`）。
+- 两个演示档案：A 为 6 岁患儿（家长代记），B 为 24 岁成年患者（本人记录）——R3「本人/代记」双视角。
+- 全部为**构造数据**，不含任何真实病历；单位：Hb g/L、铁蛋白 ng/mL、身高 cm、金额元。
+- 医学口径：只记录报告原文与数值，**不做判读**；参考区间缺失就留空，不替用户补通用区间。
+- 临床研究：**未查过**（工具未安装），界面显示空态，不编造条目。
 
-Logo 来源与使用限制见 assets/README.md。许可证、作者、仓库/发布策略由本项目维护者确认后填写；模板默认为 private/UNLICENSED。
+## 开发
 
-感谢小x宝社区、DataElement 社区，以及 sam / hhx / 繁华的 ❤️ 贡献。
+```bash
+npm run check                      # 静态包合同（staticPass 必须 true）
+node scripts/measure-diff.mjs      # 重名率实测：一级 46.2% / 二级 20%（阈值 70%）
+node scripts/probe-prototype.mjs   # 26 条断言：穷举 58 个 (view,sub)、窄宽、面板、折叠、字号
+node scripts/check-hvt.mjs         # HVT X1–X4：孤儿页 0 / 路径走通 / 编辑入口 ≤1 / 候选闭环
+node scripts/shots.mjs             # 重出 README 截图（33 号）
+npm run audit                      # 家族一致性（版本/面板/检查链/文档）
+```
 
-初始化来源记录见 `.dsh-wb-starter.json`。更新社区脚手架不会覆盖本项目；需要升级时先用相同确认配置在临时目录生成，再审阅差异。CLI 用法见 [docs/CLI-GIT.md](docs/CLI-GIT.md)。
+文档索引：[SPEC](docs/SPEC.md) · [DEV-REQUIREMENTS](docs/DEV-REQUIREMENTS-2026-10-25.md) · [DIFF-MATRIX](docs/DIFF-MATRIX.md) ·
+[PATIENT-FLOW](docs/PATIENT-FLOW.md) · [INTERACTION-DESIGN](docs/INTERACTION-DESIGN.md) · [SCHEMA](docs/SCHEMA.md) ·
+[METRIC-GRADING](docs/METRIC-GRADING.md) · [GUIDELINE-BRIDGE](docs/GUIDELINE-BRIDGE.md) · [DEV-PLAN](docs/DEV-PLAN.md)
 
-## HTML先行与数据演进
+## 许可与声明
 
-业务开发前先交付HTML交互工作台原型、实际预览并由用户确认版本/hash和范围。数据设计先区分领域事实、流程状态和页面读模型，走查前端/流程变化、兼容与迁移；原型对象不直接作为表。见[规范](docs/14-HTML-AND-DATA-CONTRACT.md)。
+本工具用于患者信息整理，不构成医疗建议。NCCN® 为美国国家综合癌症网络注册商标，本仓库与 NCCN 无关联；
+重型地中海贫血不属于 NCCN 癌种目录，本项目范围参照《86 个罕见病病种诊疗指南（2025 年版）》病种目录（#78），
+**不复制其临床内容**。Thalassaemia International Federation (TIF) 2021 TDT 指南（4th ed，ISBN 9789963717187）
+仅做书目级引用，正文未能取得。

@@ -1,0 +1,381 @@
+{
+  "_note": "场景路径表机器可读版（与 docs/INTERACTION-DESIGN.md §一 一一对应）。check-hvt.mjs 用它做 X1/X2 覆盖断言；改路径先改这里与文档两处，再改实现。",
+  "version": "v0.2",
+  "paths": [
+    {
+      "id": "S00",
+      "name": "回到看板看今天要做什么",
+      "entryText": "距离上次输血",
+      "views": [
+        "dashboard"
+      ],
+      "subs": [],
+      "product": "一眼看到倒计时、待办与入口区",
+      "ai": false
+    },
+    {
+      "id": "S01",
+      "name": "记录一次输血",
+      "entryText": "记这次输血",
+      "views": [
+        "transfusion"
+      ],
+      "subs": [
+        [
+          "transfusion",
+          0
+        ],
+        [
+          "transfusion",
+          2
+        ]
+      ],
+      "product": "输血记录 +1，看板倒计时重置",
+      "ai": true
+    },
+    {
+      "id": "S02",
+      "name": "看输血间隔趋势",
+      "entryText": "距离上次输血",
+      "views": [
+        "transfusion"
+      ],
+      "subs": [
+        [
+          "transfusion",
+          1
+        ]
+      ],
+      "product": "间隔折线（含带宽说明）",
+      "ai": false
+    },
+    {
+      "id": "S03",
+      "name": "记一次铁蛋白",
+      "entryText": "铁蛋白最近一次",
+      "views": [
+        "iron"
+      ],
+      "subs": [
+        [
+          "iron",
+          0
+        ]
+      ],
+      "product": "铁蛋白点 +1",
+      "ai": true
+    },
+    {
+      "id": "S04",
+      "name": "记一次方案变更",
+      "entryText": "铁负荷与排铁",
+      "views": [
+        "iron"
+      ],
+      "subs": [
+        [
+          "iron",
+          0
+        ],
+        [
+          "iron",
+          1
+        ],
+        [
+          "iron",
+          2
+        ],
+        [
+          "iron",
+          3
+        ]
+      ],
+      "product": "新方案行（旧行保留）",
+      "ai": true
+    },
+    {
+      "id": "S05",
+      "name": "量一次身高体重",
+      "entryText": "生长发育最近一次",
+      "views": [
+        "growth"
+      ],
+      "subs": [
+        [
+          "growth",
+          0
+        ],
+        [
+          "growth",
+          1
+        ],
+        [
+          "growth",
+          2
+        ]
+      ],
+      "product": "生长点 +1，百分位重算",
+      "ai": true
+    },
+    {
+      "id": "S06",
+      "name": "勾一次筛查完成",
+      "entryText": "筛查日历",
+      "views": [
+        "screening"
+      ],
+      "subs": [
+        [
+          "screening",
+          0
+        ],
+        [
+          "screening",
+          1
+        ],
+        [
+          "screening",
+          2
+        ],
+        [
+          "screening",
+          3
+        ]
+      ],
+      "product": "筛查项状态变「已做」",
+      "ai": true
+    },
+    {
+      "id": "S07",
+      "name": "整理一次复诊材料",
+      "entryText": "就诊准备",
+      "views": [
+        "review"
+      ],
+      "subs": [
+        [
+          "review",
+          0
+        ],
+        [
+          "review",
+          1
+        ],
+        [
+          "review",
+          2
+        ],
+        [
+          "review",
+          3
+        ]
+      ],
+      "product": "导出 Markdown",
+      "ai": true
+    },
+    {
+      "id": "S08",
+      "name": "记一次费用",
+      "entryText": "费用与血源",
+      "views": [
+        "cost"
+      ],
+      "subs": [
+        [
+          "cost",
+          0
+        ],
+        [
+          "cost",
+          1
+        ],
+        [
+          "cost",
+          2
+        ],
+        [
+          "cost",
+          3
+        ]
+      ],
+      "product": "费用行 +1，按月聚合",
+      "ai": true
+    },
+    {
+      "id": "S09",
+      "name": "记一次抗体/配血",
+      "entryText": "输血本",
+      "views": [
+        "transfusion"
+      ],
+      "subs": [
+        [
+          "transfusion",
+          3
+        ]
+      ],
+      "product": "抗体记录 +1",
+      "ai": true
+    },
+    {
+      "id": "S10",
+      "name": "问一个关于「再生一个」的问题",
+      "entryText": "生殖与遗传",
+      "views": [
+        "genetics"
+      ],
+      "subs": [
+        [
+          "genetics",
+          0
+        ],
+        [
+          "genetics",
+          1
+        ],
+        [
+          "genetics",
+          2
+        ],
+        [
+          "genetics",
+          3
+        ]
+      ],
+      "product": "就诊问题 +1",
+      "ai": true
+    },
+    {
+      "id": "S11",
+      "name": "在趋势里看某一天发生了什么",
+      "entryText": "病情一图秀",
+      "views": [
+        "timeline"
+      ],
+      "subs": [
+        [
+          "timeline",
+          0
+        ],
+        [
+          "timeline",
+          1
+        ],
+        [
+          "timeline",
+          2
+        ]
+      ],
+      "product": "当天记录详情（只读）",
+      "ai": false
+    },
+    {
+      "id": "S12",
+      "name": "补一份外院报告",
+      "entryText": "资料库",
+      "views": [
+        "records"
+      ],
+      "subs": [
+        [
+          "records",
+          0
+        ],
+        [
+          "records",
+          1
+        ],
+        [
+          "records",
+          2
+        ],
+        [
+          "records",
+          3
+        ],
+        [
+          "records",
+          4
+        ]
+      ],
+      "product": "文档 +1",
+      "ai": true
+    },
+    {
+      "id": "S13",
+      "name": "看懂一个词/一条误解",
+      "entryText": "术语与误解",
+      "views": [
+        "glossary"
+      ],
+      "subs": [
+        [
+          "glossary",
+          0
+        ],
+        [
+          "glossary",
+          1
+        ],
+        [
+          "glossary",
+          2
+        ]
+      ],
+      "product": "术语卡（无判断）",
+      "ai": false
+    },
+    {
+      "id": "S14",
+      "name": "记一件孩子在学校的难处",
+      "entryText": "心理与家庭",
+      "views": [
+        "mind"
+      ],
+      "subs": [
+        [
+          "mind",
+          0
+        ],
+        [
+          "mind",
+          1
+        ],
+        [
+          "mind",
+          2
+        ],
+        [
+          "mind",
+          3
+        ]
+      ],
+      "product": "私密记录 +1（不进导出）",
+      "ai": false
+    },
+    {
+      "id": "S15",
+      "name": "查今天吃什么要注意什么",
+      "entryText": "营养与日常",
+      "views": [
+        "nutrition"
+      ],
+      "subs": [
+        [
+          "nutrition",
+          0
+        ],
+        [
+          "nutrition",
+          1
+        ],
+        [
+          "nutrition",
+          2
+        ]
+      ],
+      "product": "待问医生的清单条目",
+      "ai": false
+    }
+  ]
+}

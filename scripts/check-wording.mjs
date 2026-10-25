@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* 文案红线：不诊断、不处置、不判读、不评价患者。
- * 例外：同一行带 `wording-allow` 注释的（如"要被拦住的词表本身"）跳过。
+ * 仅独立注释行不作为渲染文案扫描；任意行尾标记不得豁免整行。
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, extname } from 'node:path'
@@ -28,7 +28,7 @@ for (const d of ['dsh', 'lib', 'public', 'prototypes', 'src', 'demo']) {
 for (const f of files) {
   const text = readFileSync(f, 'utf8')
   text.split('\n').forEach((line, i) => {
-    if (/wording-allow|eslint-disable|BANNED|const JUDGE/.test(line)) return
+    if (/^\s*(?:\/\/|\/\*|\*|<!--)/.test(line)) return
     for (const w of BANNED) if (line.includes(w)) errors.push(`${f.replace(ROOT + '/', '')}:${i + 1} 禁用词「${w}」`)
     for (const w of JUDGE) if (line.includes(w) && !/不得|禁止|不出现|不许|写成|避免/.test(line)) {
       errors.push(`${f.replace(ROOT + '/', '')}:${i + 1} 判读词「${w}」`)

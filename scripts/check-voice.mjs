@@ -37,8 +37,7 @@ for (const e of entries) {
   const plain = norm(e.text)
   if (e.status === 'public') {
     if (!e.src) errors.push(`V3 public 缺出处：${e.view}`)
-    const probe = plain.slice(0, 14)
-    if (!voicesNorm.includes(probe)) errors.push(`V2 public 原话在 patient-voices.md 找不到：${e.view} → ${probe}`)
+    if (!plain || !voicesNorm.includes(plain)) errors.push(`V2 public 完整原话在 patient-voices.md 找不到：${e.view} → ${e.text}`)
   } else if (e.status === 'hypothesis') {
     if (e.src) errors.push(`V3 hypothesis 不应带出处：${e.view}`)
   } else {

@@ -1,0 +1,12 @@
+- insert:
+    - id: ferropal-workbench-main
+      name: "@ferropal-dsh/thalassemia-workbench"
+      config:
+        root: !!js dshHomePath('ferropal-workbench')
+
+# 说明（必须放在条目之后：check-workbench-package.mjs 用 ^-\s+insert: 断言文件以条目开头）：
+# 1. name 写 npm 包名，写相对/绝对路径 Node 解析不到；
+# 2. 空文件或纯注释文件会导致启动失败；
+# 3. config.root 由宿主按 dshHomePath 注入本机数据目录，代码里禁止硬编码家目录；
+#    dsh/index.js 的 Config 把 root 声明为 required，⑤ 号断言会比对本行是否存在；
+# 4. 改 slug 时本行与 dsh/index.js 的注释一起改（M5 拆出 lib/identity.js 后 HOME_DIR 成为唯一根）。

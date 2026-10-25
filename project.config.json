@@ -1,0 +1,19 @@
+{
+  "packageName": "@ferropal-dsh/thalassemia-workbench",
+  "title": "小铁宝 FerroPal · 重型地中海贫血工作台",
+  "repository": "https://github.com/xyb-openharness-dsh-plugins/thalassemia-workbench",
+  "description": "本机优先的重型地中海贫血（输血依赖型）输血—去铁循环、血清铁蛋白与生长发育随访、遗传与生育咨询准备工作台",
+  "slug": "ferropal-workbench",
+  "layoutMode": "business-first",
+  "businessWidth": 0.65,
+  "targetUsers": "重型地中海贫血（输血依赖型）患儿家长为主要记录者，兼顾成年患者本人；南方省份家庭为主",
+  "scenario": "每 2–4 周规律输血，需记录输血前血红蛋白与输注量；血清铁蛋白季度复查与去铁方案调整；儿童生长发育与内分泌并发症筛查；同型地贫配偶的生育与遗传咨询准备",
+  "coreFlow": [
+    "选择本机资料目录并导入血常规/铁蛋白/配血报告",
+    "核对候选信息，建立确诊与分型档案（基因型原文照抄）",
+    "记录输血周期与去铁方案变更",
+    "整理铁蛋白与生长发育趋势",
+    "生成复诊与遗传咨询准备材料"
+  ],
+  "completion": "得到来源可追溯、可核对的个人/代记病程档案：分型与基因型档案、输血周期本、去铁方案与依从记录、铁蛋白与生长发育趋势、内分泌筛查日历、复诊与遗传咨询准备材料；所有候选信息经用户核对入档，不提供诊断与治疗建议"
+}

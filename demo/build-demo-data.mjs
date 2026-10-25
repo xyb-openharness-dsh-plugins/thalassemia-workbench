@@ -226,7 +226,8 @@ function assemble(p) {
   ].sort((a, b) => (a.d < b.d ? -1 : 1))
   const intervals = p.transfusions.slice(1).map((t, i) => daysBetween(p.transfusions[i].date, t.date))
   const last = p.transfusions[p.transfusions.length - 1]
-  const nextDue = addDays(last.date, 20)
+  // 无预约事实字段，不从输血历史推算医嘱或预约。
+  const nextDue = null
   const monthly = {}
   for (const c of p.costs) {
     const m = c.date.slice(0, 7)

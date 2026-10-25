@@ -3,7 +3,7 @@
  * 三条硬规则：
  * 1. 有 ord 按 ord（不叠 DESC）；没有 ord 的复合主键表按 rowid。
  * 2. 分类值走 dec，且**不补 unit 键**——原型里分类没有 unit，多补一个键 parity 就红。
- * 3. 派生值读取时算（输血间隔中位数、距今天数、下次预约、月度聚合），**不落库**。
+ * 3. 事实统计读取时算（输血间隔中位数、距今天数、月度聚合），**不落库**；无预约事实不推算。
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -11,11 +11,6 @@ import { fileURLToPath } from 'node:url'
 const PAGES = JSON.parse(readFileSync(fileURLToPath(new URL('../src/pages.json', import.meta.url)), 'utf8')).pages
 const WINDOW_MONTHS = 6
 
-const addDays = (iso, n) => {
-  const d = new Date(iso + 'T00:00:00+08:00')
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
-}
 const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00+08:00') - new Date(a + 'T00:00:00+08:00')) / 86400000)
 
 const rows = (db, sql, ...args) => db.prepare(sql).all(...args)
@@ -88,7 +83,7 @@ export function profileBundle(db, id, { dataEnd = new Date().toISOString().slice
         count: transfusions.length,
         last_date: last?.date || null,
         days_since: last ? daysBetween(last.date, dataEnd) : null,
-        next_due: last ? addDays(last.date, 20) : null,
+        next_due: null, // 未登记预约事实：不从历史输血日推算下一次预约。
         intervals,
         median_interval: sorted.length ? sorted[Math.floor(sorted.length / 2)] : null,
       },

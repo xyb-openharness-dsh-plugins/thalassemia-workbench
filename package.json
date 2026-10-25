@@ -35,14 +35,15 @@
     "check": "node --check dsh/index.js && node --check dsh/server.js && node --check dsh/store.js && node --check dsh/readmodels.js && node --check dsh/cadence.js && node scripts/build-version.mjs --check && node scripts/build-client.mjs --check && node scripts/check-syntax.mjs && node scripts/check-workbench-package.mjs . && node scripts/check-schema.mjs && node scripts/check-wording.mjs && node scripts/check-demo-columns.mjs && node scripts/check-voice.mjs && node scripts/check-readme-assets.mjs && node --disable-warning=ExperimentalWarning --test test/*.test.mjs",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.mjs",
     "audit": "node scripts/check-conformance.mjs .",
-    "release:check": "npm run check && npm run audit",
+    "release:check": "npm run check && npm run verify && npm run audit",
     "probe": "node scripts/probe-prototype.mjs",
     "hvt": "node scripts/check-hvt.mjs",
     "shots": "node scripts/shots.mjs",
     "measure:diff": "node scripts/measure-diff.mjs",
     "fetch:trials": "node --disable-warning=ExperimentalWarning scripts/fetch-tdt-trials-2026.mjs",
     "pack:check": "npm pack --dry-run",
-    "check:install": "node scripts/check-install.mjs"
+    "check:install": "node scripts/check-install.mjs",
+    "verify": "node scripts/probe-prototype.mjs && node scripts/probe-metric-cards.mjs && node scripts/check-hvt.mjs && node scripts/measure-diff.mjs"
   },
   "dsh": {
     "bundle": {

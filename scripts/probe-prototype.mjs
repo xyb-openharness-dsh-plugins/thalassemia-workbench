@@ -180,17 +180,8 @@ if (wantShots) {
   await page.screenshot({ path: join(SHOTS, 'timeline.png') })
 }
 
-/* ---------- 6. 3D 卡翻转 ---------- */
-const flip = await page.evaluate(async () => {
-  location.hash = 'dashboard'; document.querySelector('.nav-btn[data-view="dashboard"]').click()
-  const btn = document.querySelector('[data-act="flip"]')
-  if (!btn) return { ok: false, why: 'no flip button' }
-  btn.click()
-  await new Promise((r) => setTimeout(r, 50))
-  const card = document.querySelector('.flip')
-  return { ok: card?.dataset.flipped === 'true', flipped: card?.dataset.flipped }
-})
-flip.ok ? pass('flip-a', '3D 卡可翻到背面') : fail('flip-a', '翻转失败', flip)
+/* ---------- 6. 3D 卡翻转：已迁到 scripts/probe-metric-cards.mjs（MC2/MC3/MC4/MC5/MC6/MC7） ----------
+   本探针不再断言翻面：旧 .flip 卡已并入按目录分类的 .metric-card，重复断言会掩盖真正的 3D 判据。 */
 
 /* ---------- 7. 整页视图（32 号 A1–A10 的核心四条） ---------- */
 const pv = await page.evaluate(async () => {

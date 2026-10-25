@@ -224,15 +224,89 @@ function table(cols, rows, emptyText = '还没有记录。') {
   </table></div>`
 }
 
-function flipCard(id, front, back) {
-  const flipped = state.flipped[id] === true
-  return `<div class="flip ${flipped ? '' : 'is-front'}" data-flipped="${flipped}">
-    <div class="flip-inner">
-      <div class="flip-face">${front}</div>
-      <div class="flip-face flip-back">${back}</div>
-    </div>
-    <button class="text-link" data-act="flip" data-id="${id}" style="margin-top:6px">${flipped ? '翻回正面' : '看最近几次'}</button>
-  </div>`
+/* One catalog owns category order, names and identities on both pages. No clinical ranking. */
+const metricCatalog = [
+  { id: 'hb', name: '输血前血红蛋白', short: 'Hb', category: '血常规', unit: 'g/L', color: 'var(--mint-ink)' },
+  { id: 'ferritin', name: '血清铁蛋白', short: '铁蛋白', category: '铁负荷', unit: 'ng/mL', color: 'var(--rust)' },
+  { id: 'height', name: '身高', short: '身高', category: '身体测量', unit: 'cm', color: '#507baf' },
+  { id: 'weight', name: '体重', short: '体重', category: '身体测量', unit: 'kg', color: '#8a688e' },
+]
+const metricCategories = [...new Set(metricCatalog.map(m => m.category))]
+function metricSeries(profile = P()) {
+  return metricCatalog.flatMap(def => {
+    const raw = def.id === 'weight' ? (profile.growth?.rows || []).map(r => ({ d: r[0], v: r[2] })) : (profile.series?.[def.id] || [])
+    const groups = new Map()
+    raw.filter(r => !['pending', 'withdrawn', 'superseded'].includes(r.reviewState)).forEach((r, index) => {
+      const unit = r.unit === undefined ? def.unit : r.unit
+      const method = r.method || '', laboratory = r.laboratory || ''
+      const key = JSON.stringify([def.id, unit, method, laboratory])
+      if (!groups.has(key)) groups.set(key, { ...def, key, unit, method, laboratory, rows: [] })
+      groups.get(key).rows.push({ ...r, index, v: numOrNull(r.v) })
+    })
+    if (!groups.size) groups.set(def.id, { ...def, key: def.id, method: '', laboratory: '', rows: [] })
+    return [...groups.values()].map(g => {
+      g.rows.sort((a, b) => String(a.d || '').localeCompare(String(b.d || '')) || a.index - b.index)
+      g.points = g.rows.filter(r => Number.isFinite(r.v) && /^\d{4}-\d{2}-\d{2}$/.test(r.d || '') && Number.isFinite(Date.parse(r.d)))
+      g.connectable = !!(g.unit && g.method && g.laboratory) && new Set(g.points.map(r => r.d)).size === g.points.length
+      return g
+    })
+  })
+}
+function selectedMetricSeries() {
+  const all = metricSeries()
+  if (!state.metricSelections) state.metricSelections = {}
+  if (!state.metricSelections[state.profile]) state.metricSelections[state.profile] = all.filter(g => ['hb', 'ferritin'].includes(g.id)).slice(0, 4).map(g => g.key)
+  return all.filter(g => state.metricSelections[state.profile].includes(g.key))
+}
+function metricPlot(groups, mini = false) {
+  const points = groups.flatMap(g => g.points)
+  if (!points.length) return '<div class="empty">没有所选指标的有效日期数值；可扩大资料范围或选择指标。</div>'
+  const dates = points.map(r => Date.parse(r.d)), start = Math.min(...dates), span = Math.max(86400000, Math.max(...dates) - start)
+  const W = 640, H = mini ? 122 : 230
+  const x = d => 28 + (Date.parse(d) - start) / span * 580
+  return `<svg class="metric-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="每条线按自身全部记录范围绘制，不代表不同指标数值可比">${groups.map(g => {
+    const vals = g.points.map(r => r.v)
+    if (!vals.length) return ''
+    const lo = Math.min(...vals), hi = Math.max(...vals), range = hi - lo || Math.max(Math.abs(hi) * .08, 1)
+    const y = v => 16 + (1 - (v - lo) / range) * (H - 45)
+    const pts = g.points.map(r => ({ x: x(r.d), y: y(r.v) }))
+    return `<g data-series="${esc(g.key)}" style="--series-color:${g.color}">${g.connectable && pts.length > 1 ? `<path class="metric-line" pathLength="1" d="${monotonePath(pts)}"/>` : ''}${g.points.map((r, i) => `<g role="button" tabindex="0" data-act="metric-source" data-key="${esc(g.key)}" data-index="${r.index}" aria-label="${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}，查看来源"><title>${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}</title><circle class="point-hit" cx="${pts[i].x}" cy="${pts[i].y}" r="12"/><circle class="metric-dot" cx="${pts[i].x}" cy="${pts[i].y}" r="3.5"/></g>`).join('')}</g>`
+  }).join('')}<text x="28" y="${H - 4}" class="metric-axis">${esc(points.reduce((a,r) => r.d < a ? r.d : a, points[0].d))}</text><text x="608" y="${H - 4}" text-anchor="end" class="metric-axis">${esc(points.reduce((a,r) => r.d > a ? r.d : a, points[0].d))}</text></svg>`
+}
+function metricCard(g) {
+  const key = state.profile + ':' + g.key, flipped = !!state.flipped[key]
+  const latest = g.rows.filter(r => r.d).at(-1), previous = g.points.at(-2)
+  const comparable = g.connectable && latest && Number.isFinite(latest.v) && previous && latest.d !== previous.d
+  const delta = comparable ? latest.v - previous.v : null
+  const comparison = delta !== null ? `${delta > 0 ? '↑ +' : delta < 0 ? '↓ ' : '→ '}${Number(delta.toFixed(3))} ${g.unit}（${previous.d} → ${latest.d}）` : g.rows.length === 1 ? '暂无可比较的前次记录' : '仅显示记录点；可比信息待核'
+  return `<div class="metric-card" role="group" tabindex="0" aria-roledescription="可翻转指标卡" aria-label="${esc(g.name)}，${flipped ? '趋势面' : '最近值面'}，Enter 或空格翻面" data-act="metric-flip" data-key="${esc(key)}" data-flipped="${flipped}"><div class="metric-card-inner"><div class="metric-face metric-front" aria-hidden="${flipped}" ${flipped ? 'inert' : ''}><span class="eyebrow">${esc(g.category)}</span><h3>${esc(g.name)}</h3><div class="metric-value">${latest ? esc(Number.isFinite(latest.v) ? latest.v : latest.rawValue || '非数值记录') : '还没有记录'} <small>${esc(g.unit || '单位待核')}</small></div><p>${esc(comparison)}</p><p class="note-line">只回顾记录，不判断变化含义。</p><div class="metric-meta">${g.rows.length} 次记录 · ${esc(latest?.d || '日期待核')}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')}<br>${latest ? `<button class="text-link" data-act="metric-source" data-key="${esc(g.key)}" data-index="${latest.index}">来源${latest.sourceText || latest.documentId ? '详情' : '待补 · 查看记录'}</button>` : '来源待补'} · 点击整卡看趋势</div></div><div class="metric-face metric-back" aria-hidden="${!flipped}" ${!flipped ? 'inert' : ''}><h3>${esc(g.name)} · ${esc(g.unit)}</h3>${metricPlot([g], true)}<p class="note-line">${g.points.length === 1 ? '只有 1 次记录，暂不连线' : !g.connectable ? '单位 / 方法 / 机构未齐或同日多次：只画点，不连线' : '同一可比组，按真实日期连接'}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')} · 点击点看来源</p></div></div></div>`
+}
+function metricGroups() {
+  const all = metricSeries()
+  return metricCategories.map(category => `<section class="metric-category" data-category="${category}"><h2>${category} <small>${metricCatalog.filter(m => m.category === category).length} 项 · ${all.filter(g => g.category === category).length} 个可比组</small></h2><div class="metric-grid">${all.filter(g => g.category === category).map(metricCard).join('')}</div></section>`).join('')
+}
+function metricTimelinePanel() {
+  const selected = selectedMetricSeries()
+  return `<div class="chart-wrap">${metricPlot(selected)}<div class="chart-legend">${selected.map(g => `<span>${esc(g.name)} · 全期 ${g.points.length ? Math.min(...g.points.map(r => r.v)) + '–' + Math.max(...g.points.map(r => r.v)) : '无数据'} ${esc(g.unit)}</span>`).join('')}</div><p class="note-line">每条线按该指标全部记录范围缩放，不代表不同指标数值可比。方法 / 单位 / 机构未知仅画点。</p></div>`
+}
+function metricPicker() {
+  const selected = selectedMetricSeries().map(g => g.key), all = metricSeries()
+  state.metricDraft = [...selected]
+  dialog({ title: '选择一图秀指标', eyebrow: '最多 4 条可比序列 · 取消不修改', body: `<p id="metric-selection-status" role="status">已选 ${selected.length} / 4</p><div class="metric-options">${metricCategories.map(category => `<fieldset data-category="${category}"><legend>${category} · ${metricCatalog.filter(m => m.category === category).length} 项</legend>${all.filter(g => g.category === category).map(g => `<label title="${esc(g.unit)} / ${esc(g.method || '方法待核')} / ${esc(g.laboratory || '机构待核')}"><input type="checkbox" data-metric-option="${esc(g.key)}" ${selected.includes(g.key) ? 'checked' : ''}> ${esc(g.short)} <small>${esc(g.rows.at(-1)?.v ?? '未记录')} ${esc(g.unit)} · ${esc(g.method || '方法待核')} / ${esc(g.laboratory || '机构待核')}</small></label>`).join('')}</fieldset>`).join('')}</div>`, foot: '<button class="ghost" data-act="close">取消</button><button class="primary" data-act="metric-apply">确认应用</button>' })
+}
+function metricSource(key, index) {
+  const g = metricSeries().find(g => g.key === key), r = g?.rows.find(r => r.index === Number(index))
+  if (!r) return
+  dialog({ title: g.name + ' · 记录来源', body: `<p>${esc(r.d || '日期待核')} · ${esc(r.rawValue ?? r.v ?? '原文待补')} ${esc(g.unit || '单位待核')}</p><p>方法：${esc(g.method || '待核')}；机构：${esc(g.laboratory || '待核')}</p><p>转录原文：${esc(r.sourceText || '未转录')}</p><p>参考区间原文：${esc(r.referenceRangeText || '未转录')}</p><p>报告引用：${esc(r.documentId || '来源待补；无可打开的原件')}</p><p class="note-line">演示 / 已保存记录；不会据此生成报告链接。</p>`, foot: '<button class="ghost" data-act="close">关闭来源</button>' })
+}
+function flipMetric(el) {
+  const flipped = !state.flipped[el.dataset.key]
+  state.flipped[el.dataset.key] = flipped
+  el.dataset.flipped = String(flipped)
+  el.setAttribute('aria-label', el.getAttribute('aria-label').replace(flipped ? '最近值面' : '趋势面', flipped ? '趋势面' : '最近值面'))
+  const front = $('.metric-front', el), back = $('.metric-back', el)
+  front.inert = flipped; back.inert = !flipped
+  front.setAttribute('aria-hidden', String(flipped)); back.setAttribute('aria-hidden', String(!flipped))
 }
 
 function fold(id, { summary, count, body }) {
@@ -274,7 +348,7 @@ function vDashboard() {
       actions: `<button class="primary" data-write="primary" data-act="add-transfusion">记这次输血</button>`,
       body: stat('trans', '上次输血', String(days), '天前',
         `上次 ${t.summary.last_date} · 共 ${t.summary.count} 次`,
-        t.summary.next_due ? `下次预约 ${t.summary.next_due}（${nextIn >= 0 ? '还有 ' + nextIn + ' 天' : '已过 ' + Math.abs(nextIn) + ' 天'}）` : ''),
+        t.summary.next_due ? `下次预约 ${t.summary.next_due}（${nextIn >= 0 ? '还有 ' + nextIn + ' 天' : '已过 ' + Math.abs(nextIn) + ' 天'}）` : '预约未登记'),
     })}
     ${card({
       title: '最近一次输血前血红蛋白',
@@ -322,17 +396,7 @@ function vDashboard() {
     ${card({
       title: '三张卡可以翻过来看最近几次',
       sub: '整卡 180° 翻转；分类记录不翻不连线',
-      body: `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-        ${flipCard('f-hb',
-          `<div><span class="cap">输血前 Hb</span><div class="num" style="font-size:1.6em;font-weight:700">${hbLast ? hbLast[1] : '—'}<small style="font-size:.45em;color:var(--muted)"> g/L</small></div><span class="cap">${hbLast ? hbLast[0] : ''}</span></div>`,
-          miniSeries(p.series.hb, 'g/L'))}
-        ${flipCard('f-ft',
-          `<div><span class="cap">铁蛋白</span><div class="num" style="font-size:1.6em;font-weight:700">${lastIron ? lastIron[1] : '—'}<small style="font-size:.45em;color:var(--muted)"> ng/mL</small></div><span class="cap">${lastIron ? lastIron[0] : ''}</span></div>`,
-          miniSeries(p.series.ferritin, 'ng/mL'))}
-        ${flipCard('f-ht',
-          `<div><span class="cap">身高</span><div class="num" style="font-size:1.6em;font-weight:700">${lastGrowth ? lastGrowth[1] : '—'}<small style="font-size:.45em;color:var(--muted)"> cm</small></div><span class="cap">${lastGrowth ? lastGrowth[0] : ''}</span></div>`,
-          miniSeries(p.series.height, 'cm'))}
-      </div>`,
+      body: `<div class="metric-grid">${metricSeries().filter(g => ['hb', 'ferritin', 'height'].includes(g.id)).map(metricCard).join('')}</div>`,
     })}
   </div>
 
@@ -436,11 +500,9 @@ function vIron(sub) {
       const cells = []
       for (let i = 27; i >= 0; i--) {
         const d = new Date(new Date(today() + 'T00:00:00+08:00').getTime() - i * 86400000).toISOString().slice(0, 10)
-        const seed = (Number(d.replace(/-/g, '')) * 2654435761) % 97
-        const st = seed < 70 ? 'done' : seed < 82 ? 'miss' : 'none'
-        cells.push(`<i class="${st}" title="${d} · ${st === 'done' ? '已做' : st === 'miss' ? '未做' : '未记'}"></i>`)
+        cells.push(`<i class="none" title="${d} · 未记录"></i>`)
       }
-      return card({ title: '依从打卡（最近 28 天）', sub: '漏记 ≠ 未做；三态必须可区分', actions: moreMenu('adherence'),
+      return card({ title: '依从打卡（最近 28 天）', sub: '没有打卡事实；全部显示未记录，不推算已做或未做', actions: moreMenu('adherence'),
         body: `<div class="heat">${cells.join('')}</div>
           <div class="heat-legend"><span><i style="display:inline-block;width:9px;height:9px;background:var(--mint-ink);border-radius:2px"></i> 已做</span>
           <span><i style="display:inline-block;width:9px;height:9px;background:#f0d7d8;border-radius:2px"></i> 未做</span>
@@ -632,13 +694,7 @@ function vRecords(sub) {
         ['出生日期', p.profile.birth_date], ['确诊日', p.profile.dx_date],
         ['首次输血', p.profile.transfusion_start], ['基因型（原文）', p.profile.genotype],
       ]) }),
-    () => card({ title: '指标检测', sub: '数值型与分类型分开存；分类不进趋势',
-      body: table(['指标', '类型', '记录数'], [
-        ['输血前 Hb', 'numeric', String(p.series.hb.length)],
-        ['血清铁蛋白', 'numeric', String(p.series.ferritin.length)],
-        ['身高', 'numeric', String(p.series.height.length)],
-        ['里程碑（确诊/开始输血…）', 'qual', String(p.events.filter((e) => e.kind !== 'transfusion' && e.kind !== 'lab').length || 4)],
-      ]) }),
+    () => `<p class="note-line">按同一目录分类；单位、方法、机构变化拆组。分类记录不进入数值趋势。</p>${metricGroups()}`,
     () => card({ title: '病情汇总', sub: '一页看完，可导出', actions: `<button class="primary" data-act="export">导出复诊材料</button>`,
       body: `<ul style="list-style:none;padding:0;margin:0">
         <li>· 档案：${esc(p.profile.meta)}</li>
@@ -654,21 +710,8 @@ function vRecords(sub) {
 /* ---------------- 病情一图秀 ---------------- */
 function vTimeline(sub) {
   const p = P(), s = sub ?? 0
-  const series = []
-  if (state.series.hb) series.push({ key: 'hb', label: '输血前 Hb', points: p.series.hb, rust: false })
-  if (state.series.ferritin) series.push({ key: 'ferritin', label: '铁蛋白', points: p.series.ferritin, rust: true })
-  if (state.series.height) series.push({ key: 'height', label: '身高', points: p.series.height, rust: false })
   const body = [
-    () => `<div class="toggle-row" role="group" aria-label="选择要显示的指标">
-        ${[['hb', '输血前 Hb'], ['ferritin', '铁蛋白'], ['height', '身高']].map(([k, l]) =>
-          `<button data-act="series" data-key="${k}" aria-pressed="${state.series[k]}">${l}</button>`).join('')}
-      </div>
-      <div class="chart-wrap">
-        ${chart({ series, events: p.events.filter((e) => e.kind === 'transfusion'), unit: '' })}
-        <div class="chart-legend">${series.map((x) => `<span><i style="background:${x.rust ? 'var(--rust)' : 'var(--mint-ink)'}"></i>${x.label}</span>`).join('')}
-          <span><i style="background:var(--rust);opacity:.6"></i>底部竖线=输血日</span></div>
-        <p class="note-line">不同指标量纲不同，同图只用于看"时间上有没有一起动"，不能直接比较大小。</p>
-      </div>`,
+    () => `<div class="toggle-row"><button class="ghost" data-act="metric-picker" aria-haspopup="dialog">选择指标（最多 4 条）</button></div><div id="metric-timeline-panel">${metricTimelinePanel()}</div>`,
     () => card({ title: '分类与事件', sub: '分类序列只画节点，不连线',
       body: `${table(['日期', '类型', '标签'], p.events.filter((e) => e.kind !== 'lab').map((e) => [e.d, e.kind === 'transfusion' ? '输血' : '里程碑', e.label]))}
         <p class="note-line">分类事件在数值图里只以底部竖线标注，不参与曲线插值。</p>` }),
@@ -995,9 +1038,11 @@ document.addEventListener('click', async (e) => {
     return
   }
   if (act === 'sub') { state.sub[btn.dataset.view] = Number(btn.dataset.sub); render(); return }
-  if (act === 'flip') { const id = btn.dataset.id; state.flipped[id] = !state.flipped[id]; render(); return }
+  if (act === 'metric-flip') { flipMetric(btn); return }
+  if (act === 'metric-source') { e.stopPropagation(); metricSource(btn.dataset.key, btn.dataset.index); return }
+  if (act === 'metric-picker') { metricPicker(); return }
+  if (act === 'metric-apply') { state.metricSelections[state.profile] = [...state.metricDraft]; $('#dialog').close(); $('#metric-timeline-panel').innerHTML = metricTimelinePanel(); return }
   if (act === 'fold') { const id = btn.dataset.id; state.folds[id] = !state.folds[id]; render(); return }
-  if (act === 'series') { const k = btn.dataset.key; state.series[k] = !state.series[k]; render(); return }
   if (act === 'goto') {
     state.view = view
     if (btn.dataset.sub !== undefined) state.sub[view] = Number(btn.dataset.sub)
@@ -1035,8 +1080,7 @@ document.addEventListener('click', async (e) => {
     p.transfusion.summary.count = p.transfusion.rows.length
     p.transfusion.summary.last_date = last[0]
     p.transfusion.summary.days_since = daysAgo(last[0])
-    const d2 = new Date(last[0] + 'T00:00:00+08:00'); d2.setDate(d2.getDate() + 20)
-    p.transfusion.summary.next_due = d2.toISOString().slice(0, 10)
+    p.transfusion.summary.next_due = null
     $('#dialog').close()
     toast(`已记上 ${date} 这次输血（看板倒计时已更新）`)
     render()
@@ -1142,6 +1186,7 @@ document.addEventListener('click', async (e) => {
 
 /* 键盘：Esc 只退一层 */
 document.addEventListener('keydown', (e) => {
+  if (['Enter', ' '].includes(e.key) && e.target.matches('.metric-card, [data-act="metric-source"]')) { e.preventDefault(); e.target.click(); return }
   if (e.key === 'Escape') {
     if (state.pageview) { e.preventDefault(); closePageView(); return }
     if ($('#dialog').open) { $('#dialog').close() }
@@ -1194,3 +1239,12 @@ applyHash()
 initSplitter()
 render()
 console.log(`[FerroPal prototype] ${VERSION} ${BUILD} · 页面 ${PAGES.length} 一级 / ${PAGES.reduce((a, p) => a + p.subs.length, 0)} 二级`)
+
+// Picker edits are transactional: only Confirm publishes this draft.
+document.addEventListener('change', e => {
+  if (!e.target.matches('[data-metric-option]')) return
+  const checked = $$('[data-metric-option]:checked')
+  if (checked.length > 4) { e.target.checked = false; $('#metric-selection-status').textContent = '最多选择 4 条；请先取消一条。'; return }
+  state.metricDraft = checked.map(input => input.dataset.metricOption)
+  $('#metric-selection-status').textContent = `已选 ${checked.length} / 4`
+})

@@ -17,7 +17,7 @@ import { API_PREFIX, UI_PREFIX, DB_FILE } from '../lib/identity.js'
 import { seedDemo } from './demo.js'
 import { bootstrap, getProfile } from './readmodels.js'
 import { createApiHandler, servePublic } from './server.js'
-import { CADENCE, buildFollowupPlan, checkpoints, dualCadence, addMonths } from './cadence.js'
+import { cadenceSnapshot } from './cadence-view.js'
 import { version } from '../lib/version.js'
 
 export const name = 'ferropal-workbench-main'

@@ -17,3 +17,4 @@ docs/PROTOTYPE-PROBE.json
 docs/HVT-PROBE.json
 # 指南原件不入仓、不入包（引用页码与 ≤200 字符摘录即可；sha256 见 guidebooks/manifest.json）
 guidebooks/*.pdf
+docs/.probe-shots/

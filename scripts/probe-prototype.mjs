@@ -16,7 +16,8 @@ import { join } from 'node:path'
 const ROOT = join(import.meta.dirname, '..')
 const URL = 'file://' + join(ROOT, 'prototypes/v0.2/index.html')
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-const SHOTS = join(ROOT, 'docs/screenshots')
+// 探针截图是走查中间产物，不进 README 目录（README 用 scripts/shots.mjs 的具名件）
+const SHOTS = join(ROOT, 'docs/.probe-shots')
 const args = process.argv.slice(2)
 const wantShots = !args.includes('--no-shots')
 const widthArg = args.indexOf('--widths')

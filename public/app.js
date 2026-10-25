@@ -184,7 +184,7 @@ function chart({ series, events = [], unit = '', height = 210, showEvents = true
     if (!pts.length) return ''
     const d = monotonePath(pts)
     const color = s.rust ? ' rust' : ''
-    const dots = pts.map((p) => `<circle class="pt${color}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.1"/>`).join('')
+    const dots = pts.map((p) => `<g role="button" tabindex="0" data-act="pv-day" data-day="${esc(p.d)}" aria-label="${esc(p.d)} 当天记录 ${p.v}${unit ? ' ' + unit : ''}"><title>${esc(p.d)} · ${p.v}${unit ? ' ' + unit : ''}（点开当天记录）</title><circle class="pt-hit" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="9"/><circle class="pt${color}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.1"/></g>`).join('')
     const last = pts[pts.length - 1]
     return `<path class="line${color}" d="${d}"/>
             ${dots}
@@ -192,7 +192,7 @@ function chart({ series, events = [], unit = '', height = 210, showEvents = true
   }).join('')
 
   const evtMarks = showEvents
-    ? events.map((e) => `<rect class="evt" x="${(x(e.d) - 1.4).toFixed(1)}" y="${H - padB + 3}" width="2.8" height="7" rx="1"><title>${esc(e.d)} ${esc(e.label)}</title></rect>`).join('')
+    ? events.map((e) => `<g role="button" tabindex="0" data-act="pv-day" data-day="${esc(e.d)}" aria-label="${esc(e.d)} ${esc(e.label)}"><rect class="evt-hit" x="${(x(e.d) - 6).toFixed(1)}" y="${H - padB}" width="12" height="13" fill="transparent"/><rect class="evt" x="${(x(e.d) - 1.4).toFixed(1)}" y="${H - padB + 3}" width="2.8" height="7" rx="1"/></g>`).join('')
     : ''
 
   const xLabels = [t0, t1].map((d, i) =>
@@ -216,11 +216,11 @@ function card({ title, sub, body, actions = '', cls = '' }) {
 }
 const moreMenu = (page, extra = '') => `<button class="more" data-act="more" data-page="${page}" aria-haspopup="dialog">⋯ 更多</button>${extra}`
 
-function table(cols, rows, emptyText = '还没有记录。') {
+function table(cols, rows, emptyText = '还没有记录。', rowAct = null) {
   if (!rows || !rows.length) return `<div class="empty">${esc(emptyText)}</div>`
   return `<div class="table-wrap"><table>
     <thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td class="${i === 0 ? 'num-cell' : ''}">${c === null || c === undefined ? '<span class="tag">null</span>' : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+    <tbody>${rows.map((r) => `<tr${rowAct ? ` role="button" tabindex="0" data-act="${esc(rowAct.act)}" data-day="${esc(r[rowAct.col])}" aria-label="${esc(r[0])} 详情"` : ''}>${r.map((c, i) => `<td class="${i === 0 ? 'num-cell' : ''}">${c === null || c === undefined ? '<span class="tag">null</span>' : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>`
 }
 
@@ -340,7 +340,8 @@ function vDashboard() {
   </div>`
 
   const hbLast = t.rows[t.rows.length - 1]
-  return `${voiceBlock('dashboard')}
+  return `<div class="page-head"><div><h1>看板</h1><p>今天要做什么、下一次输血是哪天、有没有该问医生的事。</p></div><div class="card-actions">${draftButton('dashboard')}</div></div>
+  ${voiceBlock('dashboard')}
   <div class="grid">
     ${card({
       title: '距离上次输血',
@@ -447,7 +448,7 @@ function normalCdf(z) {
   let p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))))
   return z > 0 ? 1 - p : p
 }
-window.__ferropal = { normalCdf, monotonePath }
+window.__ferropal = { normalCdf, monotonePath, openPageView, closePageView, backPageView, pageViewForDay }
 
 /* ---------------- 输血本 ---------------- */
 function vTransfusion(sub) {
@@ -748,25 +749,149 @@ function pageHead(viewId, withSubs) {
   const cur = state.sub[viewId] || 0
   return `<div class="page-head">
     <div><h1>${esc(page.label)}</h1><p>${esc(page.subtitle)}</p></div>
+    <div class="card-actions">${draftButton(viewId)}</div>
   </div>
   ${withSubs && page.subs.length ? `<div class="subnav" role="tablist" aria-label="${esc(page.label)}子页">
     ${page.subs.map((s, i) => `<button role="tab" data-act="sub" data-view="${viewId}" data-sub="${i}" aria-selected="${cur === i}">${esc(s)}</button>`).join('')}
   </div>` : ''}`
 }
 
-/* ---------------- 整页视图（32 号） ---------------- */
+/* ---------------- AI 草稿：携带本页上下文，仅填草稿不发送 ---------------- */
+/** 每页一句话上下文：只放已记录的事实；私密页不放内容。 */
+const DRAFT_CONTEXT = {
+  dashboard: () => `档案：${P().profile.meta}；输血 ${P().transfusion.summary.count} 次，最近 ${P().transfusion.summary.last_date}；铁蛋白最近 ${P().iron.rows.at(-1)?.[0] || '无记录'}。`,
+  transfusion: () => `输血记录 ${P().transfusion.rows.length} 条，中位间隔 ${P().transfusion.summary.median_interval ?? '未够两次'} 天；抗体记录 ${P().antibody.rows.length} 条。`,
+  iron: () => `铁蛋白记录 ${P().iron.rows.length} 条，最近 ${P().iron.rows.at(-1)?.[0] || '无'}；心肝铁报告 ${P().iron.t2star.length} 份。`,
+  growth: () => `身高记录 ${P().growth.rows.length} 条，最近 ${P().growth.rows.at(-1)?.[1] || '无'} cm；体重 ${P().growth.rows.at(-1)?.[2] || '无'} kg。`,
+  screening: () => `筛查项 ${P().screening.rows.length} 项，其中有结果 ${P().screening.rows.filter((r) => r[3] !== '—').length} 项。`,
+  genetics: () => `基因型原文：${P().profile.genotype}；就诊问题 ${P().questions.rows.length} 条。`,
+  cost: () => `费用记录 ${P().cost.rows.length} 条。`,
+  glossary: () => '我想弄明白一个术语的含义，不想得到处置建议。',
+  nutrition: () => '我想把饮食和用药的注意点问清楚，不需要食谱推荐。',
+  mind: () => '（私密页：不把本页内容带进 AI 草稿）',
+  records: () => `资料 ${P().docs.length} 份，待核对候选 ${P().candidates.filter((c) => c.status === 'pending').length} 条。`,
+  timeline: () => `可选指标：${(typeof metricCatalog !== 'undefined' ? metricCatalog.map((m) => m.short).join('、') : '见指标页')}。`,
+  review: () => `待问问题 ${P().questions.rows.filter((q) => q[2] === 'open').length} 条；就诊准备材料未导出。`,
+}
+const DRAFT_PROMPT = {
+  dashboard: '帮我把这几件待办按"下次就诊前要确认的先后"排一下，并指出我还缺哪份材料。',
+  transfusion: '帮我把最近几次输血整理成一段话，方便我在门诊说清楚。',
+  iron: '帮我把铁蛋白的变化整理成问题清单，我去问医生为什么这样调整。',
+  growth: '帮我把身高体重的变化整理成三个可以问医生的问题。',
+  screening: '帮我看这份筛查清单里，哪些是"有结果但没说清"，哪些根本没记录。',
+  genetics: '帮我把"要不要再生一个"这件事整理成一份就诊问题清单，只列问题。',
+  cost: '帮我把这几个月自费的项目按类归一下，我要算清楚一个月大概多少。',
+  glossary: '用一个普通人能懂的说法解释这些词，别给我治疗建议。',
+  nutrition: '帮我把饮食方面要问医生的问题列出来，不要给食谱。',
+  mind: '我想整理一下自己的感受，不带评判地记下来。',
+  records: '帮我把待核对的候选逐条列出来，说明每条来自哪份材料。',
+  timeline: '帮我看这些指标在时间上有没有一起变化，只描述同不同步，不下结论。',
+  review: '帮我把待问的问题按优先级排一下，并提醒我要带哪几份材料。',
+}
+let draftSeq = 0
+function draftButton(view) {
+  const prompt = `${DRAFT_CONTEXT[view] ? DRAFT_CONTEXT[view]() : ''}\n${DRAFT_PROMPT[view] || '帮我整理这一页的要点。'}`
+  return `<button class="ghost" data-act="agent-draft" data-prompt="${esc(prompt.trim())}" aria-haspopup="dialog">带着这页去问 AI</button>`
+}
+function fallbackDraft(prompt, reason) {
+  state.agent.open = true
+  state.agent.pendingDraft = prompt
+  render()
+  const input = $('#agent-input')
+  if (input) { input.value = prompt; input.focus() }
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(prompt).catch(() => {})
+  toast(reason || '已填进原型输入框（原型未连接 DSH 会话，不会自动发送）')
+}
+function requestAgentDraft(prompt) {
+  const hosted = typeof window.parent !== 'undefined' && window.parent !== window
+  if (!hosted) return fallbackDraft(prompt)
+  const requestId = 'r' + (++draftSeq) + '-' + Date.now().toString(36)
+  let settled = false
+  const finish = (ok, message) => {
+    if (settled) return
+    settled = true
+    window.removeEventListener('message', onMessage)
+    clearTimeout(timer)
+    if (ok) toast(message || '已填进宿主会话输入框——检查后自己按发送')
+    else fallbackDraft(prompt, '没能写进会话草稿：' + (message || '未知原因') + '（已复制，可粘贴）')
+  }
+  const onMessage = (event) => {
+    if (event.source !== window.parent) return
+    if (event.origin !== location.origin) return
+    const data = event.data
+    if (!data || data.type !== 'ferropal:agent-draft-result' || data.requestId !== requestId) return
+    finish(data.ok === true, data.error)
+  }
+  window.addEventListener('message', onMessage)
+  const timer = setTimeout(() => finish(false, '会话没有回应，可能未连接'), 4000)
+  window.parent.postMessage({ type: 'ferropal:agent-draft', requestId, prompt }, location.origin)
+}
+
+/* ---------------- 整页视图（32 号）：栈式，返回/关闭/退一层 ---------------- */
 function openPageView({ title, body, eyebrow = '详情' }) {
-  state.pageview = { title, body, eyebrow, scroll: $('#main').scrollTop, focus: document.activeElement }
+  const stack = state.pageview ? state.pageview.stack : []
+  const trigger = document.activeElement
+  // 关闭后 #main 会整块重渲染，旧节点会脱离文档；记下"怎么找回它"而不是存节点引用。
+  const key = trigger && trigger.dataset
+    ? { act: trigger.dataset.act || null, day: trigger.dataset.day || null, view: state.view, sub: state.sub[state.view] || 0 }
+    : null
+  state.pageview = {
+    stack: [...stack, { title, body, eyebrow, scroll: $('#main').scrollTop, focusKey: key }],
+  }
   render()
 }
-function closePageView() {
-  const pv = state.pageview
-  state.pageview = null
+/** 重渲染后把焦点还给触发者：先按 data-day/data-act 找同款节点，找不到退回当前页签。 */
+function restoreFocus(key) {
+  if (!key) return
+  let el = null
+  if (key.act && key.day) el = $(`#main [data-act="${key.act}"][data-day="${key.day}"]`)
+  if (!el && key.act) el = $(`#main [data-act="${key.act}"]`)
+  if (!el) el = $(`#nav .nav-btn[data-view="${key.view}"]`)
+  if (el && el.focus) el.focus({ preventScroll: true })
+}
+/** 返回：只退一层（深 3 层不会一按全关）。 */
+function backPageView() {
+  if (!state.pageview) return
+  const stack = state.pageview.stack.slice(0, -1)
+  const back = stack[stack.length - 1] || null
+  state.pageview = stack.length ? { stack } : null
   render()
-  if (pv) {
-    $('#main').scrollTop = pv.scroll || 0
-    if (pv.focus && pv.focus.focus) pv.focus.focus()
+  if (back) return
+  const pv = state.pageview === null && state.__lastClosed
+  if (state.__lastClosed) {
+    $('#main').scrollTop = state.__lastClosed.scroll || 0
+    restoreFocus(state.__lastClosed.focusKey)
+    state.__lastClosed = null
   }
+}
+/** 关闭：整叠一起关，回到打开前的滚动位置与焦点。 */
+function closePageView() {
+  const first = state.pageview?.stack?.[0] || null
+  state.pageview = null
+  state.__lastClosed = first
+  render()
+  if (first) {
+    $('#main').scrollTop = first.scroll || 0
+    restoreFocus(first.focusKey)
+  }
+}
+/** 当天记录：整页视图的第一类真实内容。 */
+function pageViewForDay(day) {
+  const p = P()
+  const rowsOf = (list, map) => list.filter((r) => map(r)[0] === day).map(map)
+  const parts = []
+  const trans = rowsOf(p.transfusion.rows, (r) => [r[0], `输血前 Hb ${r[1]} g/L · ${r[2]} · ${r[3]}`, `反应：${r[4]}`, `地点：${r[5]}`])
+  if (trans.length) parts.push(`<h3>输血</h3>${table(['日期', '记录', '反应', '地点'], trans)}`)
+  const iron = rowsOf(p.iron.rows, (r) => [r[0], `${r[1]} ${r[2]}`, r[3]])
+  if (iron.length) parts.push(`<h3>铁蛋白</h3>${table(['日期', '数值', '报告原文'], iron)}`)
+  const growth = rowsOf(p.growth.rows, (r) => [r[0], `身高 ${r[1]} cm`, `体重 ${r[2]} kg`])
+  if (growth.length) parts.push(`<h3>身高体重</h3>${table(['日期', '身高', '体重'], growth)}`)
+  const q = rowsOf(p.questions.rows, (r) => [r[0], r[1], r[2]]).filter(() => false)
+  const body = parts.length
+    ? parts.join('')
+    : `<div class="empty">这天没有记录。<br>输血、铁蛋白、身高体重都按记录日期归到这里。</div>`
+  openPageView({ title: `${day} 当天记录`, eyebrow: '当天记录', body })
+  return q
 }
 
 /* ---------------- 渲染 ---------------- */
@@ -815,11 +940,12 @@ function render() {
     el.className = 'pageview'
     el.setAttribute('role', 'region')
     el.setAttribute('aria-label', state.pageview.title)
+    const top = state.pageview.stack[state.pageview.stack.length - 1]
     el.innerHTML = `<div class="pageview-bar">
         <button class="ghost" data-act="pv-back">← 返回</button>
-        <div class="grow"><span class="eyebrow">${esc(state.pageview.eyebrow)}</span><h1>${esc(state.pageview.title)}</h1></div>
+        <div class="grow"><span class="eyebrow">${esc(top.eyebrow)}${state.pageview.stack.length > 1 ? ` · 第 ${state.pageview.stack.length} 层` : ''}</span><h1>${esc(top.title)}</h1></div>
         <button class="icon-btn" data-act="pv-close" aria-label="关闭整页视图">×</button>
-      </div>${state.pageview.body}`
+      </div>${top.body}`
     document.body.appendChild(el)
   }
 }
@@ -1126,7 +1252,9 @@ document.addEventListener('click', async (e) => {
   }
 
   // ---- 整页视图 ----
-  if (act === 'pv-back' || act === 'pv-close') { closePageView(); return }
+  if (act === 'pv-back') { backPageView(); return }
+  if (act === 'pv-close') { closePageView(); return }
+  if (act === 'pv-day') { pageViewForDay(btn.dataset.day); return }
   if (act === 'agent') {
     state.agent.open = !state.agent.open
     render()
@@ -1141,13 +1269,8 @@ document.addEventListener('click', async (e) => {
     return
   }
   if (act === 'agent-draft') {
-    // IP10：预写提示词进输入框，不自动发送
-    state.agent.open = true
-    state.agent.pendingDraft = btn.dataset.prompt || ''
-    render()
-    const input = $('#agent-input')
-    if (input) { input.value = state.agent.pendingDraft; input.focus() }
-    toast('已把提示词放进输入框，你可以改完再发送')
+    // IP10：预写提示词进草稿，不自动发送；宿主桥失败时明确说"未接通"
+    requestAgentDraft(btn.dataset.prompt || '')
     return
   }
   if (act === 'cand-accept') {
@@ -1186,9 +1309,14 @@ document.addEventListener('click', async (e) => {
 
 /* 键盘：Esc 只退一层 */
 document.addEventListener('keydown', (e) => {
-  if (['Enter', ' '].includes(e.key) && e.target.matches('.metric-card, [data-act="metric-source"]')) { e.preventDefault(); e.target.click(); return }
+  if (['Enter', ' '].includes(e.key) && e.target.matches('.metric-card, [data-act="metric-source"], [data-act="pv-day"], tr[role="button"]')) {
+    e.preventDefault()
+    // SVG 元素没有 click()，统一走事件派发，鼠标与键盘行为一致
+    e.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    return
+  }
   if (e.key === 'Escape') {
-    if (state.pageview) { e.preventDefault(); closePageView(); return }
+    if (state.pageview) { e.preventDefault(); backPageView(); return }
     if ($('#dialog').open) { $('#dialog').close() }
   }
 })

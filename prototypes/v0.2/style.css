@@ -424,3 +424,9 @@ dialog::backdrop { background: rgba(30, 40, 35, .35); }
 @container (max-width:699px) { .metric-grid { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:699px) { .metric-grid { grid-template-columns:minmax(0,1fr); } }
 @media(prefers-reduced-motion:reduce) { .metric-card-inner { transition:none; } .metric-line { animation:none; stroke-dasharray:none; stroke-dashoffset:0; } }
+
+/* 整页视图里的当天记录与图表可点命中区（32 号） */
+.pt-hit, .evt-hit { cursor: pointer; }
+.pt-hit:focus-visible, .evt-hit:focus-visible { outline: 2px solid var(--mint-ink); outline-offset: 1px; }
+tr[role="button"] { cursor: pointer; }
+.page-head .card-actions { align-self: flex-start; }

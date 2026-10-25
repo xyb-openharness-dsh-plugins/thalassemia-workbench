@@ -39,28 +39,28 @@ const shot = async (name) => {
 
 // 1 看板（含入口区与三张翻转卡）
 await go('dashboard')
-await shot('readme-dashboard-0.2.0')
+await shot('readme-dashboard-0.4.0')
 
 // 2 输血本 · 周期与间隔（间隔折线 + 带宽说明）
 await go('transfusion', 1)
-await shot('readme-transfusion-interval-0.2.0')
+await shot('readme-transfusion-interval-0.4.0')
 
 // 3 铁负荷与排铁 · 铁蛋白趋势（事件竖线，无阈值线）
 await go('iron', 0)
-await shot('readme-iron-trend-0.2.0')
+await shot('readme-iron-trend-0.4.0')
 
 // 4 生长发育（百分位 + 示例参考表声明）
 await go('growth', 0)
-await shot('readme-growth-0.2.0')
+await shot('readme-growth-0.4.0')
 
 // 5 折叠卡：收起态
 await go('dashboard')
-await shot('readme-fold-closed-0.2.0')
+await shot('readme-fold-closed-0.4.0')
 
 // 6 折叠卡：展开态
 await page.click('.fold-head')
 await new Promise((r) => setTimeout(r, 150))
-await shot('readme-fold-open-0.2.0')
+await shot('readme-fold-open-0.4.0')
 
 // 7 AI 面板打开（35%）+ 候选块
 await page.click('[data-act="agent"]')
@@ -68,21 +68,21 @@ await page.waitForFunction(() => !document.querySelector('#agent-dock').hidden)
 await page.type('#agent-input', '铁蛋白这次 3820')
 await page.click('[data-act="agent-send"]')
 await page.waitForSelector('.cand')
-await shot('readme-agent-candidate-0.2.0')
+await shot('readme-agent-candidate-0.4.0')
 
 // 8 窄宽 760（顶栏换行、导航保留文字、无横向溢出）
 await page.setViewport({ width: 760, height: 900, deviceScaleFactor: 1 })
 await go('screening', 2)
-await shot('readme-narrow-760-0.2.0')
+await shot('readme-narrow-760-0.4.0')
 
 // 9 病情一图秀（多指标 + 事件竖线）
 await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 })
 await go('timeline', 0)
-await shot('readme-timeline-0.2.0')
+await shot('readme-timeline-0.4.0')
 
 // 10 就诊准备（问题清单，带来源页）
 await go('review', 1)
-await shot('readme-review-questions-0.2.0')
+await shot('readme-review-questions-0.4.0')
 
 await browser.close()
 console.log('done →', OUT)

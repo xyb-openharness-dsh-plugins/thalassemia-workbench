@@ -1,6 +1,6 @@
 # HVT 评审 · X1–X4（机器断言）
 
-- 生成时间：2026-10-25T04:37:03.492Z
+- 生成时间：见 docs/HVT-PROBE.json（本文件不再写入时间戳，避免每次跑都产生无意义 diff）
 - 生成方式：`node scripts/check-hvt.mjs`（读 `src/pages.json` + `src/paths.json`，在无头 Chrome 里逐条走）
 - 结论：**全部 PASS**
 

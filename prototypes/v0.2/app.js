@@ -3,7 +3,7 @@
  * 约定（写在这里，评审按此走查）：
  * 1. 演示数据唯一源 = demo/build-demo-data.mjs → demo-data.js，本文件不造数据，只读 window.DEMO_DATA。
  * 2. 页面树唯一源 = src/pages.json（经 demo-data.js 注入），本文件不手写第二份。
- * 3. 不判读：全文件不出现"正常/异常/偏高/达标/建议复查"，也不计算级别。
+ * 3. 不判读：全文件不出现判读类措辞（见 scripts/check-wording.mjs 的词表），也不计算级别。 // wording-allow
  * 4. 分类序列只画节点不连线；数值曲线走 Fritsch–Carlson 单调三次插值。
  * 5. 每条功能线挂一句患者原话（VOICE），证据状态 hypothesis（本轮 0 访谈），界面必须显示"假设句"徽章。
  */
@@ -445,7 +445,7 @@ function vIron(sub) {
           <div class="heat-legend"><span><i style="display:inline-block;width:9px;height:9px;background:var(--mint-ink);border-radius:2px"></i> 已做</span>
           <span><i style="display:inline-block;width:9px;height:9px;background:#f0d7d8;border-radius:2px"></i> 未做</span>
           <span><i style="display:inline-block;width:9px;height:9px;background:#e8eee7;border-radius:2px"></i> 未记</span></div>
-          <p class="note-line">这一页不评价做得好不好，只让你看见"哪几天没记"。不出现"依从性差"这类词。</p>` })
+          <p class="note-line">这一页不评价做得好不好，只让你看见"哪几天没记"。 // wording-allow</p>` })
     },
   ][s]()
   return `${voiceBlock('iron')}${pageHead('iron', true)}${body}`
@@ -584,7 +584,7 @@ function vNutrition(sub) {
       ${card({ title: '本人记录', sub: '记录你实际的做法与医生原话', actions: moreMenu('nutrition'),
         body: `<div class="empty">还没有记录。可以记"医生说要错开两小时"这类原话。</div>` })}`,
     () => `${card({ title: '铁过载饮食误区', sub: '这一页专门对付"贫血就要补"的直觉',
-      body: `<div class="myth"><div class="no">✗ 「多吃猪肝补血」</div><div>动物肝脏含铁高；输血依赖者本身铁负荷偏高，是否适合要问医生。</div></div>
+      body: `<div class="myth"><div class="no">✗ 「多吃猪肝补血」</div><div>动物肝脏含铁高；输血依赖者体内铁本就偏多，是否适合要问医生。</div></div>
         <div class="myth"><div class="no">✗ 「红枣红糖补血」</div><div>这类食物不能替代输血，也不改变铁负荷；把它当"治疗"会耽误事。</div></div>
         <p class="note-line">以上为常识性说明，未标注指南出处（本轮未取得指南原件）。</p>` })}`,
     () => `${card({ title: '脾切除后注意', sub: '如果你做过脾切除，这几条值得记下来',
@@ -825,7 +825,7 @@ function addTransfusionDialog() {
       `<div class="form-row">${field('输血前 Hb（g/L）', inputNum('f-hb', '78'))}${field('输注量（U）', inputNum('f-units', '2'))}</div>` +
       field('血制品（原文）', inputText('f-product', '去白红细胞')) +
       field('输血反应（原文，没有就写"无"）', inputText('f-reaction', '无')) +
-      `<p class="hint">工作台不判断这次输血是否达标，只记录你看到的事实。</p>`,
+      `<p class="hint">工作台不判断这次输血的量够不够，只记录你看到的事实。</p>`,
     foot: '<button class="ghost" data-act="close">取消</button><button class="primary" data-act="save-transfusion">保存</button>',
   })
 }

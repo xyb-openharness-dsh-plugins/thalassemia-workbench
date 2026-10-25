@@ -12,7 +12,7 @@
  *   node demo/build-demo-data.mjs            # 写两个产物
  *   node demo/build-demo-data.mjs --check    # 只比对产物是否与现有一致（CI 用）
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join, dirname } from 'node:path'
 
@@ -294,8 +294,9 @@ async function writeSqlite(bundle, outPath) {
   mkdirSync(dirname(outPath), { recursive: true })
   if (existsSync(outPath)) rmSync(outPath)
   const db = new DatabaseSync(outPath)
-  const ddl = readFileSync(join(ROOT, 'schema/0001_initial.sql'), 'utf8')
-  db.exec(ddl)
+  // 执行全部迁移（与运行期同一份 migrate，避免"生成器与宿主建出两个不同的库"）
+  const { migrate } = await import('../dsh/store.js')
+  migrate(db)
   db.exec('BEGIN')
   for (const key of ['A', 'B']) {
     const p = bundle.profiles[key]

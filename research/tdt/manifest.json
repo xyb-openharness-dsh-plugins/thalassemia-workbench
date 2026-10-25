@@ -1,0 +1,78 @@
+{
+  "dataset": "tdt-trials-2026",
+  "data_cutoff": "2026-10-25",
+  "generated_at": "2026-10-25T02:59:52.851Z",
+  "mcp": {
+    "path": null,
+    "available": false
+  },
+  "keywords": [
+    "地中海贫血",
+    "thalassemia",
+    "thalassaemia",
+    "输血依赖",
+    "去铁",
+    "铁过载",
+    "β-地中海贫血"
+  ],
+  "channels": [
+    {
+      "id": "ictrp",
+      "label": "WHO ICTRP",
+      "kind": "online",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    },
+    {
+      "id": "ctv",
+      "label": "Veeva CTV / ClinicalTrials.gov",
+      "kind": "index",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    },
+    {
+      "id": "chictr_online",
+      "label": "ChiCTR 实时",
+      "kind": "online",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    },
+    {
+      "id": "chinadrugtrials",
+      "label": "CDE 药物临床试验登记",
+      "kind": "online",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    },
+    {
+      "id": "chictr_corpus",
+      "label": "ChiCTR 离线语料",
+      "kind": "offline",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    },
+    {
+      "id": "xyb_archive",
+      "label": "小胰宝归档",
+      "kind": "offline",
+      "terminal": "not_queried",
+      "detail": "unified-trial-mcp 未安装（本机无 ~/Downloads/unified_search_trials）",
+      "hits": 0
+    }
+  ],
+  "records": 0,
+  "jsonl_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "sqlite_rows": 0,
+  "consistency": true,
+  "coverage_note": "本轮**未查过**任何通道；0 条不等于\"不存在\"。登记 ≠ 有效 ≠ 安全 ≠ 可入组。",
+  "honest_limits": [
+    "unified-trial-mcp 未安装，四通道均未查询（not_queried）",
+    "两个离线语料只覆盖胰腺癌，地贫属 not_configured",
+    "登记状态未核实，界面不得显示为\"可入组\""
+  ]
+}

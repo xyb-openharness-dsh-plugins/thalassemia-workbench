@@ -113,19 +113,18 @@
                 onError: () => setFrameError('页面没能加载：Harness 刚重启或插件还没加载完'),
               }),
             ),
-            open
-              ? h(React.Fragment, null,
+            h(React.Fragment, null,
                   h('div', {
                     role: 'separator', 'aria-orientation': 'vertical', tabIndex: 0,
                     'aria-label': '拖动调整 AI 面板宽度', 'aria-valuemin': PANE.min, 'aria-valuemax': PANE.max, 'aria-valuenow': width,
                     onPointerDown: () => { dragging.current = true },
                     onKeyDown,
-                    style: { flex: '0 0 6px', cursor: 'col-resize', background: '#d9e4d9' },
+                    style: { flex: '0 0 6px', display: open ? 'block' : 'none', cursor: 'col-resize', background: '#d9e4d9' },
                   }),
                   h('aside', {
                     'aria-label': 'AI 对话面板',
                     style: Object.assign({
-                      flex: drawer ? undefined : '0 0 auto', minWidth: 0, display: 'flex', flexDirection: 'column',
+                      flex: drawer ? undefined : '0 0 auto', minWidth: 0, display: open ? 'flex' : 'none', flexDirection: 'column',
                       borderInlineStart: drawer ? 0 : '1px solid #d9e4d9', background: '#fff',
                     }, paneStyle),
                   },
@@ -139,13 +138,12 @@
                       conversation
                         ? h('div', { style: { minHeight: 0 } }, conversation)
                         : h('p', { style: { color: '#5c6f64', fontSize: 12, lineHeight: 1.7 } },
-                            '业务区照常可用。需要 AI 协助时，点顶栏按钮创建会话；我不替你发送、也不替医生判断。',
+                            '业务区照常可用。当前未核实宿主会话创建能力；此按钮只展开面板，不代表会话已创建，也不会自动发送内容。',
                             frameError ? h('br', null) : null,
                             frameError ? h('span', { style: { color: '#8d3a3f' } }, frameError) : null),
                     ),
                   ),
-                )
-              : null,
+                ),
           ),
           h('footer', {
             style: { flex: '0 0 auto', borderTop: '1px solid var(--wb-line, #d9e4d9)', padding: '6px 14px', color: '#5c6f64', fontSize: 11, display: 'flex', gap: 8 },

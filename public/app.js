@@ -11,7 +11,7 @@
 
 let DATA = window.DEMO_DATA
 const PAGES = DATA.pages
-const VERSION = 'v0.4.1'
+const VERSION = 'v0.4.2'
 const BUILD = '2026-10-25'
 
 const state = {
@@ -247,7 +247,10 @@ function metricSeries(profile = P()) {
     return [...groups.values()].map(g => {
       g.rows.sort((a, b) => String(a.d || '').localeCompare(String(b.d || '')) || a.index - b.index)
       g.points = g.rows.filter(r => Number.isFinite(r.v) && /^\d{4}-\d{2}-\d{2}$/.test(r.d || '') && Number.isFinite(Date.parse(r.d)))
-      g.connectable = !!(g.unit && g.method && g.laboratory) && new Set(g.points.map(r => r.d)).size === g.points.length
+      // 可比组身份 key 已含 单位 / 方法 / 机构，组内这些字段天然一致；
+      // 因此「方法 / 机构为空」不该把整条线吞掉（演示数据与手工补录都留空）。
+      // 只保留两条硬条件：有单位（否则数值无意义）+ 同一天只有一条（同日多条顺序不明，不假定前次）。
+      g.connectable = !!g.unit && new Set(g.points.map(r => r.d)).size === g.points.length
       return g
     })
   })
@@ -263,15 +266,29 @@ function metricPlot(groups, mini = false) {
   if (!points.length) return '<div class="empty">没有所选指标的有效日期数值；可扩大资料范围或选择指标。</div>'
   const dates = points.map(r => Date.parse(r.d)), start = Math.min(...dates), span = Math.max(86400000, Math.max(...dates) - start)
   const W = 640, H = mini ? 122 : 230
-  const x = d => 28 + (Date.parse(d) - start) / span * 580
-  return `<svg class="metric-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="每条线按自身全部记录范围绘制，不代表不同指标数值可比">${groups.map(g => {
+  // 大图右侧留 96px 给末点数值标签（标签压在曲线上就读不清了）；卡片背面迷你图无标签，画满即可。
+  const plotRight = mini ? 608 : 544
+  const x = d => 28 + (Date.parse(d) - start) / span * (plotRight - 28)
+  const series = groups.map(g => {
     const vals = g.points.map(r => r.v)
-    if (!vals.length) return ''
+    if (!vals.length) return null
     const lo = Math.min(...vals), hi = Math.max(...vals), range = hi - lo || Math.max(Math.abs(hi) * .08, 1)
     const y = v => 16 + (1 - (v - lo) / range) * (H - 45)
-    const pts = g.points.map(r => ({ x: x(r.d), y: y(r.v) }))
-    return `<g data-series="${esc(g.key)}" style="--series-color:${g.color}">${g.connectable && pts.length > 1 ? `<path class="metric-line" pathLength="1" d="${monotonePath(pts)}"/>` : ''}${g.points.map((r, i) => `<g role="button" tabindex="0" data-act="metric-source" data-key="${esc(g.key)}" data-index="${r.index}" aria-label="${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}，查看来源"><title>${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}</title><circle class="point-hit" cx="${pts[i].x}" cy="${pts[i].y}" r="12"/><circle class="metric-dot" cx="${pts[i].x}" cy="${pts[i].y}" r="3.5"/></g>`).join('')}</g>`
-  }).join('')}<text x="28" y="${H - 4}" class="metric-axis">${esc(points.reduce((a,r) => r.d < a ? r.d : a, points[0].d))}</text><text x="608" y="${H - 4}" text-anchor="end" class="metric-axis">${esc(points.reduce((a,r) => r.d > a ? r.d : a, points[0].d))}</text></svg>`
+    return { g, pts: g.points.map(r => ({ x: x(r.d), y: y(r.v), v: r.v })) }
+  }).filter(Boolean)
+  const body = series.map(({ g, pts }) => `<g data-series="${esc(g.key)}" style="--series-color:${g.color}">${g.connectable && pts.length > 1 ? `<path class="metric-line" pathLength="1" d="${monotonePath(pts)}"/>` : ''}${g.points.map((r, i) => `<g role="button" tabindex="0" data-act="metric-source" data-key="${esc(g.key)}" data-index="${r.index}" aria-label="${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}，查看来源"><title>${esc(g.name)} ${r.v} ${esc(g.unit)} ${esc(r.d)}</title><circle class="point-hit" cx="${pts[i].x}" cy="${pts[i].y}" r="12"/><circle class="metric-dot" cx="${pts[i].x}" cy="${pts[i].y}" r="3.5"/></g>`).join('')}</g>`).join('')
+  // 16 号 §R4：只标末点，统一放在右侧留白里（左锚定、不压曲线），多序列按 y 错开 ≥11px。
+  const lastLabels = mini ? [] : series.map(({ g, pts }) => {
+    const last = pts[pts.length - 1]
+    return { x: plotRight + 10, y: last.y + 4, anchor: 'start', text: `${Number(last.v.toFixed(3))}${g.unit ? ' ' + g.unit : ''}`, color: g.color }
+  }).sort((a, b) => a.y - b.y)
+  lastLabels.forEach((l, i) => {
+    const prev = lastLabels[i - 1]
+    if (prev && l.y - prev.y < 11) l.y = prev.y + 11
+    l.y = Math.max(12, Math.min(H - 16, l.y))
+  })
+  const labels = lastLabels.map(l => `<text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}" text-anchor="${l.anchor}" class="metric-last" style="fill:${l.color}">${esc(l.text)}</text>`).join('')
+  return `<svg class="metric-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="每条线按自身全部记录范围绘制，不代表不同指标数值可比">${body}${labels}<text x="28" y="${H - 4}" class="metric-axis">${esc(points.reduce((a,r) => r.d < a ? r.d : a, points[0].d))}</text><text x="${plotRight}" y="${H - 4}" text-anchor="end" class="metric-axis">${esc(points.reduce((a,r) => r.d > a ? r.d : a, points[0].d))}</text></svg>`
 }
 function metricCard(g) {
   const key = state.profile + ':' + g.key, flipped = !!state.flipped[key]
@@ -279,7 +296,7 @@ function metricCard(g) {
   const comparable = g.connectable && latest && Number.isFinite(latest.v) && previous && latest.d !== previous.d
   const delta = comparable ? latest.v - previous.v : null
   const comparison = delta !== null ? `${delta > 0 ? '↑ +' : delta < 0 ? '↓ ' : '→ '}${Number(delta.toFixed(3))} ${g.unit}（${previous.d} → ${latest.d}）` : g.rows.length === 1 ? '暂无可比较的前次记录' : '仅显示记录点；可比信息待核'
-  return `<div class="metric-card" role="group" tabindex="0" aria-roledescription="可翻转指标卡" aria-label="${esc(g.name)}，${flipped ? '趋势面' : '最近值面'}，Enter 或空格翻面" data-act="metric-flip" data-key="${esc(key)}" data-flipped="${flipped}"><div class="metric-card-inner"><div class="metric-face metric-front" aria-hidden="${flipped}" ${flipped ? 'inert' : ''}><span class="eyebrow">${esc(g.category)}</span><h3>${esc(g.name)}</h3><div class="metric-value">${latest ? esc(Number.isFinite(latest.v) ? latest.v : latest.rawValue || '非数值记录') : '还没有记录'} <small>${esc(g.unit || '单位待核')}</small></div><p>${esc(comparison)}</p><p class="note-line">只回顾记录，不判断变化含义。</p><div class="metric-meta">${g.rows.length} 次记录 · ${esc(latest?.d || '日期待核')}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')}<br>${latest ? `<button class="text-link" data-act="metric-source" data-key="${esc(g.key)}" data-index="${latest.index}">来源${latest.sourceText || latest.documentId ? '详情' : '待补 · 查看记录'}</button>` : '来源待补'} · 点击整卡看趋势</div></div><div class="metric-face metric-back" aria-hidden="${!flipped}" ${!flipped ? 'inert' : ''}><h3>${esc(g.name)} · ${esc(g.unit)}</h3>${metricPlot([g], true)}<p class="note-line">${g.points.length === 1 ? '只有 1 次记录，暂不连线' : !g.connectable ? '单位 / 方法 / 机构未齐或同日多次：只画点，不连线' : '同一可比组，按真实日期连接'}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')} · 点击点看来源</p></div></div></div>`
+  return `<div class="metric-card" role="group" tabindex="0" aria-roledescription="可翻转指标卡" aria-label="${esc(g.name)}，${flipped ? '趋势面' : '最近值面'}，Enter 或空格翻面" data-act="metric-flip" data-key="${esc(key)}" data-flipped="${flipped}"><div class="metric-card-inner"><div class="metric-face metric-front" aria-hidden="${flipped}" ${flipped ? 'inert' : ''}><span class="eyebrow">${esc(g.category)}</span><h3>${esc(g.name)}</h3><div class="metric-value">${latest ? esc(Number.isFinite(latest.v) ? latest.v : latest.rawValue || '非数值记录') : '还没有记录'} <small>${esc(g.unit || '单位待核')}</small></div><p>${esc(comparison)}</p><p class="note-line">只回顾记录，不判断变化含义。</p><div class="metric-meta">${g.rows.length} 次记录 · ${esc(latest?.d || '日期待核')}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')}<br>${latest ? `<button class="text-link" data-act="metric-source" data-key="${esc(g.key)}" data-index="${latest.index}">来源${latest.sourceText || latest.documentId ? '详情' : '待补 · 查看记录'}</button>` : '来源待补'} · 点击整卡看趋势</div></div><div class="metric-face metric-back" aria-hidden="${!flipped}" ${!flipped ? 'inert' : ''}><h3>${esc(g.name)} · ${esc(g.unit)}</h3>${metricPlot([g], true)}<p class="note-line">${g.points.length === 1 ? '只有 1 次记录，暂不连线' : !g.connectable ? '缺单位或同日多次：只画点，不连线' : '同一可比组，按真实日期连接'}<br>${esc(g.method || '方法待核')} · ${esc(g.laboratory || '机构待核')} · 点击点看来源</p></div></div></div>`
 }
 function metricGroups() {
   const all = metricSeries()
@@ -287,7 +304,7 @@ function metricGroups() {
 }
 function metricTimelinePanel() {
   const selected = selectedMetricSeries()
-  return `<div class="chart-wrap">${metricPlot(selected)}<div class="chart-legend">${selected.map(g => `<span>${esc(g.name)} · 全期 ${g.points.length ? Math.min(...g.points.map(r => r.v)) + '–' + Math.max(...g.points.map(r => r.v)) : '无数据'} ${esc(g.unit)}</span>`).join('')}</div><p class="note-line">每条线按该指标全部记录范围缩放，不代表不同指标数值可比。方法 / 单位 / 机构未知仅画点。</p></div>`
+  return `<div class="chart-wrap">${metricPlot(selected)}<div class="chart-legend">${selected.map(g => `<span><i style="background:${g.color}"></i>${esc(g.name)} · 全期 ${g.points.length ? Math.min(...g.points.map(r => r.v)) + '–' + Math.max(...g.points.map(r => r.v)) : '无数据'} ${esc(g.unit)}</span>`).join('')}</div><p class="note-line">每条线按该指标全部记录范围缩放，不代表不同指标数值可比。同一指标换单位 / 方法 / 机构会拆成两条线；单点或同日多条只画点。</p></div>`
 }
 function metricPicker() {
   const selected = selectedMetricSeries().map(g => g.key), all = metricSeries()

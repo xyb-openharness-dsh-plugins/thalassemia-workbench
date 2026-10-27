@@ -21,7 +21,6 @@ const state = {
   flipped: {},
   folds: {},
   font: 'std',
-  agent: { open: false, width: 35, msgs: [], pendingDraft: '' },
   pageview: null,
   series: { hb: true, ferritin: true, height: false },
   privateOpen: false,
@@ -873,13 +872,9 @@ function draftButton(view) {
   return `<button class="ghost" data-act="agent-draft" data-prompt="${esc(prompt.trim())}" aria-haspopup="dialog">带着这页去问 AI</button>`
 }
 function fallbackDraft(prompt, reason) {
-  state.agent.open = true
-  state.agent.pendingDraft = prompt
-  render()
-  const input = $('#agent-input')
-  if (input) { input.value = prompt; input.focus() }
+  /* 页面不自建聊天窗：没有宿主会话时只把草稿复制到剪贴板，并如实说明 */
   if (navigator.clipboard?.writeText) navigator.clipboard.writeText(prompt).catch(() => {})
-  toast(reason || '已填进原型输入框（原型未连接 DSH 会话，不会自动发送）')
+  toast(reason || '没有可写入的会话：草稿已复制，可粘贴到 DSH 原生 AI 对话里')
 }
 function requestAgentDraft(prompt) {
   const hosted = typeof window.parent !== 'undefined' && window.parent !== window
@@ -1002,15 +997,6 @@ function render() {
   const fn = VIEWS[state.view] || vDashboard
   $('#main').innerHTML = fn(state.sub[state.view] || 0)
   $('#main').scrollTop = 0
-  // AI 面板
-  const dock = $('#agent-dock'), splitter = $('#agent-splitter')
-  dock.hidden = !state.agent.open
-  splitter.hidden = !state.agent.open
-  $('#agent-toggle').setAttribute('aria-expanded', String(state.agent.open))
-  $('#agent-dot').className = 'dot ' + (state.agent.open ? 'on' : '')
-  $('#agent-label').textContent = state.agent.open ? 'AI 对话（开着）' : 'AI 对话'
-  document.body.style.setProperty('--agent-w', state.agent.width + '%')
-  renderAgent()
   // 整页视图
   const old = $('.pageview')
   if (old) old.remove()
@@ -1029,27 +1015,6 @@ function render() {
   }
 }
 
-function renderAgent() {
-  const body = $('#agent-body')
-  if (!state.agent.msgs.length) {
-    body.innerHTML = `<div class="msg ai"><div class="who">小铁宝</div>
-      <p>我是这个工作台的助手。你可以说：「昨天输了 2U，输前 78」「铁蛋白这次 3820」——我会把它们整理成<b>待核对</b>的候选，你点头才入档。</p>
-      <p style="margin-top:6px;color:var(--muted)">我不会判断高低、不会建议用药。数据都在你本机。</p></div>`
-  } else {
-    body.innerHTML = state.agent.msgs.map((m, i) => `<div class="msg ${m.role === 'me' ? 'me' : 'ai'}">
-      <div class="who">${m.role === 'me' ? '我' : '小铁宝'}</div><p>${esc(m.text)}</p>
-      ${m.cand ? `<div class="cand" data-cand="${i}">
-        <div class="cand-row"><b>${esc(m.cand.field)}</b><span>${esc(m.cand.value)}</span>
-          <span class="tag ${m.cand.status === 'pending' ? 'wait' : m.cand.status === 'accepted' ? 'ok' : 'gap'}">${m.cand.status === 'pending' ? '待核对' : m.cand.status === 'accepted' ? '已入档' : '已拒收'}</span></div>
-        ${m.cand.status === 'pending' ? `<div class="cand-actions">
-          <button class="primary" data-act="cand-accept" data-idx="${i}">对，入档</button>
-          <button class="ghost" data-act="cand-reject" data-idx="${i}">不对，拒收</button></div>` : ''}
-        <span class="hint">拒收不产生任何记录（零副作用）。</span>
-      </div>` : ''}</div>`).join('')
-  }
-  const input = $('#agent-input')
-  if (input && state.agent.pendingDraft) { input.value = state.agent.pendingDraft; state.agent.pendingDraft = '' }
-}
 
 /* ---------------- 表单 / 弹窗 ---------------- */
 function dialog({ title, eyebrow = '小铁宝', body, foot = '' }) {
@@ -1334,54 +1299,9 @@ document.addEventListener('click', async (e) => {
   if (act === 'pv-back') { backPageView(); return }
   if (act === 'pv-close') { closePageView(); return }
   if (act === 'pv-day') { pageViewForDay(btn.dataset.day); return }
-  if (act === 'agent') {
-    state.agent.open = !state.agent.open
-    render()
-    if (state.agent.open) $('#agent-input')?.focus()
-    return
-  }
-  if (act === 'agent-size') {
-    state.agent.width = Number(btn.dataset.size)
-    $$('[data-act="agent-size"]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.size) === state.agent.width)))
-    $('#agent-splitter').setAttribute('aria-valuenow', String(state.agent.width))
-    document.body.style.setProperty('--agent-w', state.agent.width + '%')
-    return
-  }
   if (act === 'agent-draft') {
     // IP10：预写提示词进草稿，不自动发送；宿主桥失败时明确说"未接通"
     requestAgentDraft(btn.dataset.prompt || '')
-    return
-  }
-  if (act === 'cand-accept') {
-    const i = Number(btn.dataset.idx)
-    const m = state.agent.msgs[i]
-    m.cand.status = 'accepted'
-    P().candidates.push({ field: m.cand.field, value: m.cand.value, status: 'accepted', page: state.view, note: 'AI 候选，用户确认' })
-    toast('已入档（候选 → 记录）。可以到「资料库 › 整理草稿」看到它。')
-    render()
-    return
-  }
-  if (act === 'cand-reject') {
-    const i = Number(btn.dataset.idx)
-    const m = state.agent.msgs[i]
-    m.cand.status = 'rejected'
-    toast('已拒收：这条候选没有写入任何记录。')
-    render()
-    return
-  }
-  if (act === 'agent-send') {
-    const input = $('#agent-input')
-    const text = input.value.trim()
-    if (!text) return
-    state.agent.msgs.push({ role: 'me', text })
-    const guess = /(\d{2,4})/.exec(text)
-    state.agent.msgs.push({
-      role: 'ai',
-      text: '我先把它整理成一条候选。你看对不对——点「对，入档」才会写进记录。',
-      cand: { field: /铁蛋白/.test(text) ? 'ferritin' : /输/.test(text) ? 'transfusion_hb' : 'note', value: guess ? guess[1] : text.slice(0, 24), status: 'pending' },
-    })
-    input.value = ''
-    render()
     return
   }
 })
@@ -1400,34 +1320,6 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-/* splitter 拖动 + 键盘 */
-function initSplitter() {
-  const sp = $('#agent-splitter')
-  if (!sp) return
-  let dragging = false
-  const clamp = (w) => Math.min(45, Math.max(25, w))
-  sp.addEventListener('pointerdown', (e) => {
-    dragging = true
-    sp.setPointerCapture(e.pointerId)
-  })
-  sp.addEventListener('pointermove', (e) => {
-    if (!dragging) return
-    const rect = $('#body').getBoundingClientRect()
-    const pct = ((rect.right - e.clientX) / rect.width) * 100
-    state.agent.width = clamp(Math.round(pct))
-    document.body.style.setProperty('--agent-w', state.agent.width + '%')
-    sp.setAttribute('aria-valuenow', String(state.agent.width))
-    $$('[data-act="agent-size"]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.size) === state.agent.width)))
-  })
-  sp.addEventListener('pointerup', (e) => { dragging = false; sp.releasePointerCapture(e.pointerId) })
-  sp.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') { state.agent.width = clamp(state.agent.width + 2); e.preventDefault() }
-    if (e.key === 'ArrowRight') { state.agent.width = clamp(state.agent.width - 2); e.preventDefault() }
-    document.body.style.setProperty('--agent-w', state.agent.width + '%')
-    sp.setAttribute('aria-valuenow', String(state.agent.width))
-  })
-}
-
 /* 档案按钮 → 档案切换 */
 $('#profile-btn')?.addEventListener('click', () => profilesDialog())
 $('#font-toggle')?.addEventListener('click', () => {
@@ -1443,7 +1335,6 @@ function applyHash() {
 }
 
 applyHash()
-initSplitter()
 render()
 console.log(`[FerroPal prototype] ${VERSION} ${BUILD} · 页面 ${PAGES.length} 一级 / ${PAGES.reduce((a, p) => a + p.subs.length, 0)} 二级`)
 

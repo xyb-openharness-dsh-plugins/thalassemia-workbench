@@ -30,9 +30,6 @@
     </div>
     <nav class="tb-mid" id="nav" aria-label="一级导航"></nav>
     <div class="tb-right">
-      <button class="chip" id="agent-toggle" data-act="agent" aria-expanded="false" aria-label="打开右侧 AI 对话">
-        <i class="dot" id="agent-dot"></i><span id="agent-label">AI 对话</span>
-      </button>
       <button class="chip" data-act="settings" aria-label="打开设置">设置</button>
       <button class="chip" id="font-toggle" aria-pressed="false" title="切换大字">大字 Aa</button>
       <button class="chip primer-trigger" data-primer-open aria-label="疾病概要：定义、医学资料与指南情况、治疗全景、发展趋势" title="疾病概要：定义 · 指南 · 治疗全景 · 趋势">?</button>
@@ -42,25 +39,6 @@
 
   <div class="body" id="body">
     <main id="main" tabindex="-1"></main>
-    <div id="agent-splitter" role="separator" aria-orientation="vertical" tabindex="0"
-         aria-label="拖动调整 AI 面板宽度" aria-valuemin="25" aria-valuemax="45" aria-valuenow="35" hidden></div>
-    <aside id="agent-dock" class="agent-dock" aria-label="AI 对话面板" hidden>
-      <div class="agent-head">
-        <span class="dot" id="agent-dot2"></span><b>AI 对话</b>
-        <span class="agent-note" id="agent-note">未连接 DSH 会话（原型模拟）</span>
-        <div class="agent-sizes" role="group" aria-label="面板宽度">
-          <button data-act="agent-size" data-size="25" aria-pressed="false">窄</button>
-          <button data-act="agent-size" data-size="35" aria-pressed="true">标准</button>
-          <button data-act="agent-size" data-size="45" aria-pressed="false">宽</button>
-        </div>
-        <button class="icon-btn" id="agent-hide" data-act="agent" aria-label="收起 AI 面板">×</button>
-      </div>
-      <div class="agent-body" id="agent-body"></div>
-      <div class="agent-foot">
-        <input id="agent-input" type="text" placeholder="说出你要记的事，例如「昨天输了 2U，输前 78」" aria-label="向 AI 描述要记录的事">
-        <button class="primary" data-act="agent-send">发送</button>
-      </div>
-    </aside>
   </div>
 
   <footer class="footer">

@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.4.1 — 2026-10-27
+
+### 新增 · 36 号 v2 补齐（指南可点 + 状态卡）
+- **疾病概要引入**：新增 `primer-data.js` / `primer.js` / `primer.css`（原型与 `public/` 各一份），
+  顶栏加「?」入口，四段固定为 `definition → evidence → landscape → trend`；数据只取自本仓 README 与 docs/guidebooks 登记。
+- **指南原件可点**：evidence 表 3 行原件均为官方 PDF 直链（中国政府网 #78、TIF 4th ed 2021、TIF Short Guide 2022），
+  第 4 行（中华医学会 2017 版）如实标「未取得原件」+ note；共 3 条链接，0 条凭空编造。
+- **看板首卡状态卡（§2.6 四件）**：`D+N 状态卡 · 距下一次随访` eyebrow、由输血起点派生的大字天数、
+  现状行（档案原文 + 已记输血次数 + 下次日期与事项）、出口按钮排（输血本 + 疾病概要浮窗）；无锚点时显示「待初始化」+ 三步引导。
+- **闸门**：新增 `scripts/check-primer-links.mjs`（L1–L12，含 `--self-test` 10/10）并接入 `npm run check`；
+  新增 `scripts/probe-disease-primer.mjs`，原型与装机 `public/` 各跑 10/10。
+
+### 验证
+- `npm run check` 退出 0（62 个测试全过 + 链接断言 27 项全过）。
+- 装机层：`public/` 经 dev-server `/ui/` 跑探针 10/10；未做真机 Desktop 走查。
+
 ## v0.4.0 — 2026-10-25（开发版，装机验活中）
 
 ### 修复（独立评审 6 条 P0 中的 5 条，第 6 条部分）

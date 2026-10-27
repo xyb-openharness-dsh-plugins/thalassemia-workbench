@@ -26,6 +26,16 @@ test('源码字节一致：app.js / style.css', () => {
   }
 })
 
+/* 36 号：装机层（public/ 是宿主 iframe 真正加载的那一层）必须拿到同一份疾病概要三件套，
+ * 否则原型有「?」、装了却没有——这条断言防的就是「只改原型不算完成」。 */
+test('源码字节一致：primer 三件套（原型 ↔ 装机 public）', () => {
+  for (const f of ['primer.js', 'primer.css', 'primer-data.js']) {
+    const a = readFileSync(join(ROOT, 'prototypes/v0.2', f), 'utf8')
+    const b = readFileSync(join(ROOT, 'public', f), 'utf8')
+    assert.equal(a, b, `${f} 未同步到 public/：装机后疾病概要会缺失或版本漂移`)
+  }
+})
+
 test('index.html 的差异只在允许清单内', () => {
   const proto = readFileSync(join(ROOT, 'prototypes/v0.2/index.html'), 'utf8').split('\n')
   const pub = readFileSync(join(ROOT, 'public/index.html'), 'utf8').split('\n')

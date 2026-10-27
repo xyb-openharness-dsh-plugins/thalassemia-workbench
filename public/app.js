@@ -322,6 +322,51 @@ function fold(id, { summary, count, body }) {
   </div>`
 }
 
+/* ---------------- 36 号 §2.6 看板首卡：病程状态卡（四件） ----------------
+ * 四件：eyebrow（D+N 状态卡 · 距…）/ 大字天数（由锚点日派生，不手填）/ 现状行 / 出口按钮排。
+ * 锚点 = 输血起点（profile.transfusion_start）；没有锚点时整卡「待初始化」并给三步引导。
+ */
+const dayDiff = (from, to) => Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 86400000)
+
+function statusCard(p, t) {
+  const primerBtn = '<button class="ghost" data-primer-open aria-label="疾病概要：地中海贫血是什么？">疾病概要：地中海贫血是什么？</button>'
+  const anchor = p.profile.transfusion_start
+  if (!anchor) {
+    return `<section class="card status-card" aria-labelledby="status-card-title">
+      <span class="status-eyebrow">状态卡 · 待初始化</span>
+      <h2 class="day-num" id="status-card-title">待初始化</h2>
+      <p class="status-line">还没有「输血起点」锚点，天数不手填。三步走完，这里开始按天显示。</p>
+      <ol class="status-steps">
+        <li>先建档：出生日期、确诊日期、基因报告。</li>
+        <li>记第一次输血：得到输血起点日期。</li>
+        <li>回到看板：天数与下次事项自动出现。</li>
+      </ol>
+      <div class="status-actions">
+        <button class="primary" data-act="goto" data-view="transfusion">去记第一次输血 →</button>
+        ${primerBtn}
+      </div>
+    </section>`
+  }
+  const dayN = dayDiff(anchor, today()) + 1
+  const planned = p.screening.rows
+    .filter((r) => r[2] && r[2] !== '—' && r[2] >= today())
+    .sort((a, b) => a[2].localeCompare(b[2]))[0]
+  const nextDate = t.summary.next_due || (planned ? planned[2] : '')
+  const nextItem = t.summary.next_due ? '输血预约' : (planned ? planned[0] : '')
+  const nextText = nextDate ? `下次：${nextDate}（${nextItem}）` : '下次：待登记（输血预约与筛查计划都还没有日期）'
+  return `<section class="card status-card" aria-labelledby="status-card-title">
+    <span class="status-eyebrow">D+${dayN} 状态卡 · ${nextDate ? '距下一次随访' : '距下一次预约（未登记）'}</span>
+    <h2 class="day-num" id="status-card-title">第 ${dayN} 天</h2>
+    <span class="day-anchor">自 ${esc(anchor)} 起算（输血起点锚点，派生值不落库）</span>
+    <p class="status-line"><b>${esc(p.profile.meta)}</b> · 已记录 ${t.summary.count} 次输血 · 上次 ${esc(t.summary.last_date)}</p>
+    <p class="status-line status-next">${esc(nextText)}</p>
+    <div class="status-actions">
+      <button class="primary" data-act="goto" data-view="transfusion">看输血本（周期与间隔）→</button>
+      ${primerBtn}
+    </div>
+  </section>`
+}
+
 /* ---------------- 看板 ---------------- */
 function vDashboard() {
   const p = P(), t = p.transfusion, i = p.iron
@@ -342,6 +387,7 @@ function vDashboard() {
   const hbLast = t.rows[t.rows.length - 1]
   return `<div class="page-head"><div><h1>看板</h1><p>今天要做什么、下一次输血是哪天、有没有该问医生的事。</p></div><div class="card-actions">${draftButton('dashboard')}</div></div>
   ${voiceBlock('dashboard')}
+  ${statusCard(p, t)}
   <div class="grid">
     ${card({
       title: '距离上次输血',

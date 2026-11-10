@@ -1,6 +1,6 @@
 {
   "dataset": "tdt-trials-2026-mcp-run",
-  "generated_at": "2026-10-25T08:06:12.266Z",
+  "generated_at": "2026-11-10T19:15:54.726Z",
   "data_cutoff": "2026-10-25",
   "sourceIds": [
     "ictrp",
@@ -37,34 +37,34 @@
     }
   ],
   "dateSemantics": "study start date; not registry update date",
-  "output": "/Users/sammini/Downloads/thalassemia-workbench/assets/clinical",
+  "output": "/Users/qinxiaoqiang/Downloads/thalassemia-workbench/assets/clinical",
   "warning": "requested 9-month study-start filter; upstream enforcement unverified; first-page raw candidate snapshot; failed sources are not zero results",
   "candidateOnly": true,
   "dateAudit": {
     "requestedField": "study start date",
     "verifiedInWindow": 0,
     "outsideWindow": 0,
-    "unknownStartDate": 241
+    "unknownStartDate": 41
   },
-  "rawCandidateCount": 241,
-  "uniqueRegistrationCount": 241,
+  "rawCandidateCount": 41,
+  "uniqueRegistrationCount": 41,
   "coverage": "partial; truncated English ICTRP; failed Chinese ICTRP; unavailable CTV/ChiCTR; unverified date filtering",
   "collectionSucceeded": true,
   "clinicalCoverageComplete": false,
   "exitZeroMeaning": "assets written and integrity checked, not all sources succeeded",
   "dateWarning": "Query date parameters do not prove upstream enforcement. Unverifiable dates remain raw candidates, not accepted in-window trials.",
-  "records": 241,
-  "sqlite_rows": 241,
+  "records": 41,
+  "sqlite_rows": 41,
   "source_status_rows": 8,
   "integrity": "ok",
-  "jsonl_sha256": "7245e2d02adf5ea716227efb5ce2ed22ebc8e884d9077178db78951f3194ddde",
+  "jsonl_sha256": "dede4133273b86c98a296b1ea2f5890f0f49efad7a416a4c8f8d5c6dd2107b54",
   "consistency": true,
   "calls": [
     {
       "name": "get_source_status",
       "args": {},
-      "startedAt": "2026-10-25T06:53:56.305Z",
-      "completedAt": "2026-10-25T06:53:56.312Z",
+      "startedAt": "2026-11-10T19:14:47.695Z",
+      "completedAt": "2026-11-10T19:14:48.294Z",
       "isError": false
     },
     {
@@ -82,8 +82,8 @@
         "limit": 200,
         "offset": 0
       },
-      "startedAt": "2026-10-25T06:53:56.312Z",
-      "completedAt": "2026-10-25T06:54:27.132Z",
+      "startedAt": "2026-11-10T19:14:48.294Z",
+      "completedAt": "2026-11-10T19:15:48.553Z",
       "isError": false
     },
     {
@@ -101,44 +101,44 @@
         "limit": 200,
         "offset": 0
       },
-      "startedAt": "2026-10-25T06:54:27.132Z",
-      "completedAt": "2026-10-25T06:54:34.383Z",
+      "startedAt": "2026-11-10T19:15:48.553Z",
+      "completedAt": "2026-11-10T19:15:54.142Z",
       "isError": false
     },
     {
       "name": "get_trial_detail",
       "args": {
-        "recordId": "ictrp:CTIS2025-525025-12-00"
+        "recordId": "chinadrugtrials:CTR20242945"
       },
-      "startedAt": "2026-10-25T06:54:34.385Z",
-      "completedAt": "2026-10-25T06:54:41.646Z",
+      "startedAt": "2026-11-10T19:15:54.142Z",
+      "completedAt": "2026-11-10T19:15:54.437Z",
       "isError": false
     },
     {
       "name": "get_record_evidence",
       "args": {
-        "recordId": "ictrp:CTIS2025-525025-12-00"
+        "recordId": "chinadrugtrials:CTR20242945"
       },
-      "startedAt": "2026-10-25T06:54:41.646Z",
-      "completedAt": "2026-10-25T06:54:44.105Z",
+      "startedAt": "2026-11-10T19:15:54.437Z",
+      "completedAt": "2026-11-10T19:15:54.440Z",
       "isError": false
     },
     {
       "name": "get_trial_detail",
       "args": {
-        "recordId": "ictrp:NCT07774351"
+        "recordId": "chinadrugtrials:CTR20261284"
       },
-      "startedAt": "2026-10-25T06:54:44.105Z",
-      "completedAt": "2026-10-25T06:54:49.783Z",
+      "startedAt": "2026-11-10T19:15:54.440Z",
+      "completedAt": "2026-11-10T19:15:54.708Z",
       "isError": false
     },
     {
       "name": "get_record_evidence",
       "args": {
-        "recordId": "ictrp:NCT07774351"
+        "recordId": "chinadrugtrials:CTR20261284"
       },
-      "startedAt": "2026-10-25T06:54:49.783Z",
-      "completedAt": "2026-10-25T06:54:52.243Z",
+      "startedAt": "2026-11-10T19:15:54.708Z",
+      "completedAt": "2026-11-10T19:15:54.710Z",
       "isError": false
     }
   ],

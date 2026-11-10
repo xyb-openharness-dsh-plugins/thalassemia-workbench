@@ -185,9 +185,11 @@
               const service = bridge && typeof bridge.get === 'function' ? bridge.get('desktopWorkbenches') : null
               let id = typeof service?.currentSession === 'function' ? service.currentSession() : null
               if (!id) {
-                if (typeof service?.ensureSession !== 'function') throw new Error('还没有本工作台的会话，先打开一次 AI 对话再试')
-                id = await service.ensureSession({ folder: null })
-                if (!id) throw new Error('宿主没能创建会话')
+                if (typeof service?.newSession !== 'function') throw new Error('还没有本工作台的会话，先打开一次 AI 对话再试')
+                let workspaceId
+                try { workspaceId = service?.defaultWorkspace?.()?.workspaceId } catch { workspaceId = undefined }
+                id = await service.newSession(workspaceId)
+                if (!id) throw new Error('已取消资料目录选择；可以再次点击「AI 对话」重试')
               }
               return writeDraft(bridge, req.prompt, id)
             })().then((result) => {

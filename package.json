@@ -1,6 +1,6 @@
 {
   "name": "@ferropal-dsh/thalassemia-workbench",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "本机优先的重型地中海贫血（输血依赖型）输血—去铁循环、血清铁蛋白与生长发育随访、遗传与生育咨询准备工作台",
   "private": true,
   "type": "module",
@@ -32,7 +32,7 @@
     "build:client": "node scripts/build-client.mjs",
     "start": "node --disable-warning=ExperimentalWarning scripts/dev-server.mjs",
     "dev": "node --disable-warning=ExperimentalWarning scripts/dev-server.mjs",
-    "check": "node --check dsh/index.js && node --check dsh/server.js && node --check dsh/store.js && node --check dsh/readmodels.js && node --check dsh/cadence.js && node scripts/build-version.mjs --check && node scripts/build-client.mjs --check && node scripts/check-syntax.mjs && node scripts/check-workbench-package.mjs . && node scripts/check-schema.mjs && node scripts/check-wording.mjs && node scripts/check-demo-columns.mjs && node scripts/check-voice.mjs && node scripts/check-readme-assets.mjs && node --disable-warning=ExperimentalWarning --test test/*.test.mjs && node scripts/check-primer-links.mjs",
+    "check": "node --check dsh/index.js && node --check dsh/server.js && node --check dsh/store.js && node --check dsh/readmodels.js && node --check dsh/cadence.js && node scripts/build-version.mjs --check && node scripts/build-client.mjs --check && node scripts/check-syntax.mjs && node scripts/check-workbench-package.mjs . && node scripts/check-schema.mjs && node scripts/check-wording.mjs && node scripts/check-demo-columns.mjs && node scripts/check-voice.mjs && node scripts/check-readme-assets.mjs && node --disable-warning=ExperimentalWarning --test test/*.test.mjs && node scripts/check-primer-links.mjs && node scripts/check-agent-pane-contract.mjs .",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.mjs",
     "audit": "node scripts/check-conformance.mjs .",
     "release:check": "npm run check && npm run verify && npm run audit",
